@@ -23,7 +23,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String EXTRA_MESSAGE = "Hello World";
+    private String EXTRA_MESSAGE = "Hello World";
     private TextView mTextMessage;
     private Spinner mainSpinner;
     private EditText mainAddress;
@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
         btnSubmit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                EXTRA_MESSAGE = mainAddress.getText().toString();
                 StartMap(v);
             }
         });
@@ -102,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, GoogleMapsActivity.class);
         EditText editText = (EditText) findViewById(R.id.main_addressEntry);
         String message = editText.getText().toString();
-        intent.putExtra(EXTRA_MESSAGE, message);
+        intent.putExtra("MyMessage", message);
         startActivity(intent);
     }
 }

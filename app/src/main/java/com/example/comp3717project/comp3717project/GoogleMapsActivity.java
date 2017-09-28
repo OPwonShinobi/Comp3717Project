@@ -11,6 +11,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -34,6 +35,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
     private MapView mapView;
     private GoogleMap gMap;
+    EditText et_address;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,10 +45,15 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        Intent myIntent = getIntent(); // gets the previously created intent
+        String firstKeyName = myIntent.getStringExtra("MyMessage"); //Passed intent variable
+
+        et_address = (EditText) findViewById(R.id.map_address);
+        et_address.setText(firstKeyName);
     }
 
-    public void onSearch(View view) throws IOException {
-        EditText et_address = (EditText) findViewById(R.id.map_address);
+    public void onSearch() throws IOException {
         String location = et_address.getText().toString();
         List<Address> addressList = null;
 
