@@ -1,8 +1,6 @@
 package com.example.comp3717project.comp3717project;
 
 import android.content.Intent;
-import android.location.Address;
-import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -15,13 +13,9 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.google.android.gms.maps.model.LatLng;
-
-import java.io.IOError;
-import java.io.IOException;
-import java.util.List;
-
 public class MainActivity extends AppCompatActivity {
+
+    public enum JsonTypeTag {PARKING, PARKS, SHOPPING, ADDRESS};
 
     private String EXTRA_MESSAGE = "Hello World";
     private TextView mTextMessage;
