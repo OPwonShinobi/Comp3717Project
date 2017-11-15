@@ -17,6 +17,8 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -51,6 +53,25 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
         et_address = (EditText) findViewById(R.id.map_address);
         et_address.setText(firstKeyName);
+
+        FloatingActionButton FAB = (FloatingActionButton)findViewById(R.id.locate_me_fab);
+        FAB.setOnClickListener(new tempFABListener());
+    }
+
+    private class tempFABListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            String msg = "Placeholder text.";
+            Snackbar allahu = Snackbar.make(findViewById(R.id.background_linear_layout), msg, Snackbar.LENGTH_LONG);
+            allahu.setAction("Undo", new View.OnClickListener(){
+                @Override
+                public void onClick(View view) {
+                    Toast burnt = Toast.makeText(GoogleMapsActivity.this, "Undid.", Toast.LENGTH_LONG);
+                    burnt.show();
+                }
+            });
+            allahu.show();
+        }
     }
 
     public void onSearch() throws IOException {
