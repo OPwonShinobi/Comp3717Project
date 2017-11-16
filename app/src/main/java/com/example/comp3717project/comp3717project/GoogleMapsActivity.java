@@ -17,11 +17,15 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -51,27 +55,41 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
         et_address = (EditText) findViewById(R.id.map_address);
         et_address.setText(firstKeyName);
+
+        Button searchBtn = (Button) findViewById(R.id.map_btn);
+        searchBtn.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) { onSearch(); }
+        });
     }
 
-    public void onSearch() throws IOException {
+    public void onSearch() {
         String location = et_address.getText().toString();
         List<Address> addressList = null;
 
-        if(location != null || !location.equals(""))
+        //moves keyboard away without clicking back
+        View editText = this.getCurrentFocus();
+        editText.clearAnimation();
+        InputMethodManager imm = (InputMethodManager)getSystemService(this.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+
+        //location will never be null unless et_address is not found roger!
+        if(!location.equals(""))
         {
             Geocoder geocoder = new Geocoder(this);
             try {
+                //y is it a list, we only ever use 1
                 addressList = geocoder.getFromLocationName(location, 1);
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
             Address address = addressList.get(0);
             LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
             gMap.addMarker(new MarkerOptions().position(latLng).title("Marker"));
-            gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5.0f));
+            gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
             //gMap.animateCamera(CameraUpdateFactory.zoomTo(5.0f));
+        } else {
+            Toast t = Toast.makeText(this, "Please enter an address.", Toast.LENGTH_LONG);
+            t.show();
         }
     }
 

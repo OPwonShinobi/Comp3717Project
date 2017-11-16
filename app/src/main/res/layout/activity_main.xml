@@ -13,7 +13,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
-
         <TextView
             android:id="@+id/main_title"
             android:layout_width="match_parent"
@@ -46,9 +45,15 @@
             android:layout_gravity="center"
             android:layout_marginTop="200dp"
             android:text="Submit" />
-
     </FrameLayout>
-
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/locate_me_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_gravity="end|bottom"
+        android:src="@drawable/ic_location_on_black_24dp"
+        />
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/navigation"
         android:layout_width="match_parent"
