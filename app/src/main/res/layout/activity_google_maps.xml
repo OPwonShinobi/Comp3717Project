@@ -5,7 +5,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/background_linear_layout"
     >
-
     <LinearLayout
         android:id="@+id/address_header_linear_layout"
         android:layout_width="wrap_content"
@@ -13,7 +12,6 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         >
-
         <EditText
             android:id="@+id/map_address"
             android:layout_width="wrap_content"
@@ -27,17 +25,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="right"
             android:text="Search"
-            android:onClick="onSearch"/>
+            />
     </LinearLayout>
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/locate_me_fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_location_on_black_24dp"
-        android:layout_below="@id/address_header_linear_layout"
-        />
+        <!--android:layout_gravity="end|bottom"-->
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:map="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
@@ -46,7 +36,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:context="com.example.comp3717project.comp3717project.GoogleMapsActivity"
-        android:layout_below="@id/locate_me_fab"
+        android:layout_below="@id/address_header_linear_layout"
         />
 
 

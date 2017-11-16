@@ -6,6 +6,8 @@ import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,6 +16,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -87,6 +90,9 @@ public class MainActivity extends AppCompatActivity {
                 StartMap(v);
             }
         });
+
+        FloatingActionButton FAB = (FloatingActionButton)findViewById(R.id.locate_me_fab);
+        FAB.setOnClickListener(new tempFABListener());
     }
 
     public void StartMap(View view){
@@ -105,5 +111,21 @@ public class MainActivity extends AppCompatActivity {
         String message = editText.getText().toString();
         intent.putExtra("MyMessage", message);
         startActivity(intent);
+    }
+
+    private class tempFABListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            String msg = "Placeholder text.";
+            Snackbar allahu = Snackbar.make(findViewById(R.id.container), msg, Snackbar.LENGTH_LONG);
+            allahu.setAction("Undo", new View.OnClickListener(){
+                @Override
+                public void onClick(View view) {
+                    Toast burnt = Toast.makeText(MainActivity.this, "Undid.", Toast.LENGTH_LONG);
+                    burnt.show();
+                }
+            });
+            allahu.show();
+        }
     }
 }
