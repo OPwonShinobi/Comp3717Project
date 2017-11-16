@@ -18,6 +18,8 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
+    public enum JsonTypeTag {PARKING, PARKS, SHOPPING, ADDRESS};
+
     private String EXTRA_MESSAGE = "Hello World";
     private TextView mTextMessage;
     private Spinner mainSpinner;
