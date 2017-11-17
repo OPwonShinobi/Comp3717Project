@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private Spinner mainSpinner;
     private EditText mainAddress;
     private Button btnSubmit;
+    private JsonTypeTag purpose = JsonTypeTag.PARKING;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -64,11 +65,32 @@ public class MainActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 Object item = parentView.getItemAtPosition(position);
                 System.out.println(item.toString() + " " + position);     //prints the text in spinner item.
-                if(position == 1){
-                    mainAddress.setVisibility(View.VISIBLE);
-                } else {
-                    mainAddress.setVisibility(View.INVISIBLE);
+                switch (position) {
+                    case 1:
+                        mainAddress.setVisibility(View.VISIBLE);
+                        break;
+                    case 2:
+                        mainAddress.setVisibility(View.INVISIBLE);
+                        // do something for shopping
+                        purpose = JsonTypeTag.SHOPPING;
+                        break;
+                    case 3:
+                        mainAddress.setVisibility(View.INVISIBLE);
+                        // do something for parks
+                        purpose = JsonTypeTag.PARKS;
+                        break;
+                    default:
+                        mainAddress.setVisibility(View.INVISIBLE);
+                        purpose = JsonTypeTag.PARKING;
+                        break;
                 }
+
+
+//                if(position == 1){
+//                    mainAddress.setVisibility(View.VISIBLE);
+//                } else {
+//                    mainAddress.setVisibility(View.INVISIBLE);
+//                }
             }
 
             @Override
@@ -100,6 +122,15 @@ public class MainActivity extends AppCompatActivity {
         //Uri uri = Uri.parse(uriString);
         //Intent intent = new Intent(android.activity, uri);
         //startActivity(intent);
+        switch (purpose) {
+            case SHOPPING:
+                // call JSONHandler constructor for shopping
+                break;
+            case PARKS:
+                // call JSONHandler constructor for parks
+                break;
+        }
+
         Intent intent = new Intent(this, GoogleMapsActivity.class);
         EditText editText = (EditText) findViewById(R.id.main_addressEntry);
         String message = editText.getText().toString();
