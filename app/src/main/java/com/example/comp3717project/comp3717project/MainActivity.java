@@ -1,8 +1,6 @@
 package com.example.comp3717project.comp3717project;
 
 import android.content.Intent;
-import android.location.Address;
-import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -18,18 +16,14 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.model.LatLng;
-
-import java.io.IOError;
-import java.io.IOException;
-import java.util.List;
-
 public class MainActivity extends AppCompatActivity {
 
+    public enum JsonTypeTag {PARKING, PARKS, SHOPPING, ADDRESS};
     private TextView mTextMessage;
     private Spinner mainSpinner;
     private EditText mainAddress;
     private Button btnSubmit;
+    private JsonTypeTag purpose = JsonTypeTag.PARKING;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -68,13 +62,39 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 Object item = parentView.getItemAtPosition(position);
-                String msg = item.toString() + " " + position;     //prints the text in spinner item.
-                //Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
-                if(position == 1){
-                    mainAddress.setVisibility(View.VISIBLE);
-                } else {
-                    mainAddress.setVisibility(View.INVISIBLE);
+//                String msg = item.toString() + " " + position;     //prints the text in spinner item.
+//                //Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+//                if(position == 1){
+//                    mainAddress.setVisibility(View.VISIBLE);
+//                } else {
+//                    mainAddress.setVisibility(View.INVISIBLE)
+                System.out.println(item.toString() + " " + position);     //prints the text in spinner item.
+                switch (position) {
+                    case 1:
+                        mainAddress.setVisibility(View.VISIBLE);
+                        break;
+                    case 2:
+                        mainAddress.setVisibility(View.INVISIBLE);
+                        // do something for shopping
+                        purpose = JsonTypeTag.SHOPPING;
+                        break;
+                    case 3:
+                        mainAddress.setVisibility(View.INVISIBLE);
+                        // do something for parks
+                        purpose = JsonTypeTag.PARKS;
+                        break;
+                    default:
+                        mainAddress.setVisibility(View.INVISIBLE);
+                        purpose = JsonTypeTag.PARKING;
+                        break;
                 }
+
+
+//                if(position == 1){
+//                    mainAddress.setVisibility(View.VISIBLE);
+//                } else {
+//                    mainAddress.setVisibility(View.INVISIBLE);
+//                }
             }
 
             @Override
@@ -106,6 +126,15 @@ public class MainActivity extends AppCompatActivity {
         //Uri uri = Uri.parse(uriString);
         //Intent intent = new Intent(android.activity, uri);
         //startActivity(intent);
+        switch (purpose) {
+            case SHOPPING:
+                // call JSONHandler constructor for shopping
+                break;
+            case PARKS:
+                // call JSONHandler constructor for parks
+                break;
+        }
+
         Intent intent = new Intent(this, GoogleMapsActivity.class);
         intent.putExtra("MyMessage", message);
         startActivity(intent);
