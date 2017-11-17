@@ -35,10 +35,20 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        map:zOrderOnTop="false"
         tools:context="com.example.comp3717project.comp3717project.GoogleMapsActivity"
         android:layout_below="@id/address_header_linear_layout"
         />
-
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/locate_me_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_gravity="end|bottom"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/ic_location_on_black_24dp"
+        />
 
 
 </RelativeLayout>

@@ -26,7 +26,6 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String EXTRA_MESSAGE = "Hello World";
     private TextView mTextMessage;
     private Spinner mainSpinner;
     private EditText mainAddress;
@@ -69,7 +68,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 Object item = parentView.getItemAtPosition(position);
-                System.out.println(item.toString() + " " + position);     //prints the text in spinner item.
+                String msg = item.toString() + " " + position;     //prints the text in spinner item.
+                //Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
                 if(position == 1){
                     mainAddress.setVisibility(View.VISIBLE);
                 } else {
@@ -86,8 +86,8 @@ public class MainActivity extends AppCompatActivity {
 
         btnSubmit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                EXTRA_MESSAGE = mainAddress.getText().toString();
-                StartMap(v);
+                String address = mainAddress.getText().toString().trim();
+                StartMap(v, address);
             }
         });
 
@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         FAB.setOnClickListener(new tempFABListener());
     }
 
-    public void StartMap(View view){
+    public void StartMap(View view, String message){
 //        double latitude = 40.714728;
 //        double longitude = -73.998672;
 //        String label = "ABC Label";
@@ -107,8 +107,6 @@ public class MainActivity extends AppCompatActivity {
         //Intent intent = new Intent(android.activity, uri);
         //startActivity(intent);
         Intent intent = new Intent(this, GoogleMapsActivity.class);
-        EditText editText = (EditText) findViewById(R.id.main_addressEntry);
-        String message = editText.getText().toString();
         intent.putExtra("MyMessage", message);
         startActivity(intent);
     }

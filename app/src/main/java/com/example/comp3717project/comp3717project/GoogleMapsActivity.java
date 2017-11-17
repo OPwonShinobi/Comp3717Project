@@ -3,12 +3,22 @@ package com.example.comp3717project.comp3717project;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.Task;
+
+//import com.google.android.gms.location.FusedLocationProviderClient;
+//import com.google.android.gms.location.LocationServices;
+//import com.google.android.gms.location.places.GeoDataClient;
+//import com.google.android.gms.location.places.PlaceDetectionClient;
+//import com.google.android.gms.location.places.PlaceLikelihood;
+//import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
+//import com.google.android.gms.location.places.Places;
 
 import android.Manifest;
 import android.content.Intent;
@@ -40,6 +50,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     private MapView mapView;
     private GoogleMap gMap;
     EditText et_address;
+//    private FusedLocationProviderClient mFusedLocationProviderClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +60,13 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        GoogleMapOptions options = new GoogleMapOptions();
+        options.mapType(GoogleMap.MAP_TYPE_SATELLITE)
+                .compassEnabled(false)
+                .rotateGesturesEnabled(false)
+                .tiltGesturesEnabled(false);
+        mapFragment.newInstance(options);
 
         Intent myIntent = getIntent(); // gets the previously created intent
         String firstKeyName = myIntent.getStringExtra("MyMessage"); //Passed intent variable
@@ -60,6 +78,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         searchBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) { onSearch(); }
         });
+
+        FloatingActionButton FAB = (FloatingActionButton)findViewById(R.id.locate_me_fab);
+        FAB.setOnClickListener(new locateMeFABListener());
     }
 
     public void onSearch() {
@@ -80,10 +101,16 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 //y is it a list, we only ever use 1
                 addressList = geocoder.getFromLocationName(location, 1);
             } catch (IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace(); this is useless in android
+            }
+            if (addressList.size() == 0) {
+                Toast t = Toast.makeText(this, "No address found.\nPlease make sure address exists.", Toast.LENGTH_LONG);
+                t.show();
+                return;
             }
             Address address = addressList.get(0);
             LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+            gMap.clear();
             gMap.addMarker(new MarkerOptions().position(latLng).title("Marker"));
             gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
             //gMap.animateCamera(CameraUpdateFactory.zoomTo(5.0f));
@@ -147,6 +174,22 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 map.addMarker(new MarkerOptions().position(new LatLng(0,0)).title("Marker"));
                 //map.setMyLocationEnabled(true);
             }
+        }
+    }
+
+    private class locateMeFABListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            String msg = "Placeholder text.";
+            Snackbar allahu = Snackbar.make(findViewById(R.id.background_linear_layout), msg, Snackbar.LENGTH_LONG);
+            allahu.setAction("Undo", new View.OnClickListener(){
+                @Override
+                public void onClick(View view) {
+                    Toast burnt = Toast.makeText(GoogleMapsActivity.this, "Undid.", Toast.LENGTH_LONG);
+                    burnt.show();
+                }
+            });
+            allahu.show();
         }
     }
 }
