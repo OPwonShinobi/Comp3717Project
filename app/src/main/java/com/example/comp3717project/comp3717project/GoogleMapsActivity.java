@@ -12,13 +12,13 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
 
-//import com.google.android.gms.location.FusedLocationProviderClient;
-//import com.google.android.gms.location.LocationServices;
-//import com.google.android.gms.location.places.GeoDataClient;
-//import com.google.android.gms.location.places.PlaceDetectionClient;
-//import com.google.android.gms.location.places.PlaceLikelihood;
-//import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
-//import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.GeoDataClient;
+import com.google.android.gms.location.places.PlaceDetectionClient;
+import com.google.android.gms.location.places.PlaceLikelihood;
+import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
+import com.google.android.gms.location.places.Places;
 
 import android.Manifest;
 import android.content.Intent;
