@@ -56,8 +56,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     EditText et_address;
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Location mLastKnownLocation; //will zoom to this on FAB click
-    private final LatLng mDefaultLocation = new LatLng(49.205681, -122.911256); //google place new west name above this coord
+    private final LatLng mDefaultLocation = new LatLng(49.205681, -122.911256); //google places new west name above this coord
     private static final int DEFAULT_ZOOM = 15;
+    private static final int ENTRY_ZOOM = 13;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,10 +79,10 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         Intent myIntent = getIntent(); // gets the previously created intent
         String firstKeyName = myIntent.getStringExtra("MyMessage"); //Passed intent variable
 
-        et_address = (EditText) findViewById(R.id.map_address);
+        et_address = (EditText) findViewById(R.id.destination_address_edit_text);
         et_address.setText(firstKeyName);
 
-        Button searchBtn = (Button) findViewById(R.id.map_btn);
+        Button searchBtn = (Button) findViewById(R.id.search_btn);
         searchBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 onSearch();
@@ -154,8 +155,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 //            }
 //
 //            if (map != null) {
-//
-//
 //                map.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
 //
 //                    @Override
@@ -176,11 +175,12 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         if (map == null) {
             SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
             mapFragment.getMapAsync(this);
-
-            if (map != null) {
-                map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
-                //map.setMyLocationEnabled(true);
-            }
+        }
+        if (map != null) {
+            //why are we adding a marker off the coast of Africa???
+            //map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+            gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, ENTRY_ZOOM));
+            //map.setMyLocationEnabled(true);
         }
     }
 
