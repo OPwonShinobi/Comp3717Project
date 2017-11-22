@@ -1,6 +1,5 @@
 package com.example.comp3717project.comp3717project;
 
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMapOptions;
@@ -8,42 +7,38 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.PlaceDetectionClient;
-import com.google.android.gms.location.places.PlaceLikelihood;
-import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
-import com.google.android.gms.location.places.Places;
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -53,7 +48,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
     private MapView mapView;
     private GoogleMap gMap;
-    EditText et_address;
+    private EditText end_et_address;
+    private EditText start_et_address;
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Location mLastKnownLocation; //will zoom to this on FAB click
     private final LatLng mDefaultLocation = new LatLng(49.205681, -122.911256); //google places new west name above this coord
@@ -79,13 +75,21 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         Intent myIntent = getIntent(); // gets the previously created intent
         String firstKeyName = myIntent.getStringExtra("MyMessage"); //Passed intent variable
 
-        et_address = (EditText) findViewById(R.id.destination_address_edit_text);
-        et_address.setText(firstKeyName);
+        end_et_address = (EditText) findViewById(R.id.destination_address_edit_text);
+        end_et_address.setText(firstKeyName);
+        start_et_address = (EditText) findViewById(R.id.starting_address_edit_text);
 
         Button searchBtn = (Button) findViewById(R.id.search_btn);
         searchBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                onSearch();
+                onSearchForDestination();
+            }
+        });
+
+        Button routeBtn = (Button) findViewById(R.id.route_btn);
+        routeBtn.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                onSearchForRoute();
             }
         });
 
@@ -94,15 +98,44 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this); //service used to locate phone location
     }
 
-    public void onSearch() {
-        String location = et_address.getText().toString();
-        List<Address> addressList = null;
+    public void onSearchForRoute() {
+        String srcLocation = start_et_address.getText().toString().trim();
+        String destnLocation = end_et_address.getText().toString().trim();
+        hideMyKeyboard();
+		if (!srcLocation.equals("") && !destnLocation.equals(""))
+		{
+            String api_key = getResources().getString(R.string.api_key); //overloaded google_maps_key
+            //example: https://maps.googleapis.com/maps/api/directions/json?origin=Toronto&destination=Montreal&key=YOUR_API_KEY
+			String url = "https://maps.googleapis.com/maps/api/directions/json?origin=%1$s&destination=%2$s&mode=%3$s&key=%4$s";
+            srcLocation = HttpHelper.convertSpacesIntoURLFormat(srcLocation);
+            destnLocation = HttpHelper.convertSpacesIntoURLFormat(destnLocation);
+            String modeOfTransport = "driving"; //or walking, bicycling, transit(departure_time = now)
+            url = String.format(url, srcLocation, destnLocation, modeOfTransport, api_key);
+            try {
+                new AsyncRouteDownloader().execute(new URL(url));
+            } catch(IOException ioe) {
+                String msg = url + "\nWarning, URL badly formatted. Search aborted.";
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+            }
+		} else {
+			//starting address empty, search for destination instead of a route
+			onSearchForDestination();
+		} 
+    }
 
-        //moves keyboard away without clicking back
+    private void hideMyKeyboard() {
         View editText = this.getCurrentFocus();
         editText.clearAnimation();
         InputMethodManager imm = (InputMethodManager) getSystemService(this.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+    }
+
+    public void onSearchForDestination() {
+        String location = end_et_address.getText().toString();
+        List<Address> addressList = null;
+
+        //moves keyboard away without clicking back
+        hideMyKeyboard();
 
         //location will never be null unless et_address is not found roger!
         if (!location.equals("")) {
@@ -184,19 +217,38 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         }
     }
 
+    //Note: DONT change the order of vars in here unless u know wat ur doing
+    private void drawRoute(Route route) {
+        gMap.clear();
+        //add route as polyline
+        String polylineStr = route.getPolyline(); //getIntent().getStringExtra("POLYLINE_EXTRA");
+        List<LatLng> polylineCoordList = PolyUtil.decode(polylineStr);
+        PolylineOptions routeOptions = new PolylineOptions();
+        for (LatLng point : polylineCoordList) {
+            routeOptions.add(point);
+        }
+        routeOptions.color(Color.GREEN);
+        gMap.addPolyline(routeOptions);
+
+        //add start marker
+        String startAddressStr = route.getSrc(); //getIntent().getStringExtra("START_EXTRA");
+        LatLng startAddress =  polylineCoordList.get(0);
+        gMap.addMarker(new MarkerOptions().position(startAddress).title(startAddressStr).flat(false));
+
+        //add end marker
+        String endAddressStr = route.getDestn(); //getIntent().getStringExtra("END_EXTRA");
+        LatLng endAddress = polylineCoordList.get(polylineCoordList.size()-1);
+        gMap.addMarker(new MarkerOptions().position(endAddress).title(endAddressStr));
+
+        gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startAddress, DEFAULT_ZOOM));
+    }
+
     private void gotoMyLocation() {
         if (ActivityCompat.checkSelfPermission(GoogleMapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(GoogleMapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED)
         {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
@@ -214,7 +266,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                     Log.d("", "Current location is null. Using defaults.");
                     Log.e("", "Exception: %s", task.getException());
                     gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
-                    //gMap.getUiSettings().setMyLocationButtonEnabled(false);
                 }
             }
         });
@@ -228,6 +279,32 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             } catch (SecurityException e)  {
                 Log.e("Exception: %s", e.getMessage());
             }
+        }
+    }
+
+    private class AsyncRouteDownloader extends AsyncTask<URL, Void, String> {
+        @Override
+        protected String doInBackground(URL... params) {
+            return HttpHelper.parseConnectionForString(params[0]);
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Route route = null;
+            try {
+                route = HttpHelper.parseJSONObjectForDirections(new JSONObject(result));
+            } catch (Exception e) {
+                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur json", Toast.LENGTH_SHORT).show();
+            }
+            if (route == null) {
+                return;
+            }
+            //Intent i = new Intent(GoogleMapsActivity.this, MainActivity.class);
+//            Intent i = getIntent();
+//            i.putExtra("START_EXTRA", routeDetails.getSrc());
+//            i.putExtra("END_EXTRA", routeDetails.getDestn());
+//            i.putExtra("POLYLINE_EXTRA", routeDetails.getPolyline());
+            drawRoute(route);
         }
     }
 }
