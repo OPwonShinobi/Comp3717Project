@@ -113,7 +113,7 @@ public class JSONHandler extends AsyncTask<Void, Void, Void> {
                     category = parkJsonObj.getString("Category");
                 }
 
-                Park park = new Park(parkName, strName, strNum, category, coordList);
+                Park park = new Park(parkName, strName, strNum, category);
                 parkList.add(park);
             }
         } catch (final JSONException e) {

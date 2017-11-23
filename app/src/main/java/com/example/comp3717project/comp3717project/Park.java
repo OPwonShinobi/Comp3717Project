@@ -12,7 +12,7 @@ public class Park {
     private Park() {
     }
 
-    public Park(String parkName, String strName, String strNum, String category, List<List<Double>> coordList) {
+    public Park(String parkName, String strName, String strNum, String category) {
         this.parkName = parkName;
         this.strName = strName;
         this.strNum = strNum;

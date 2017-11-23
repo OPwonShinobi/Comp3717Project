@@ -1,20 +1,5 @@
 package com.example.comp3717project.comp3717project;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMapOptions;
-import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -35,10 +20,28 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -55,6 +58,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     private final LatLng mDefaultLocation = new LatLng(49.205681, -122.911256); //google places new west name above this coord
     private static final int DEFAULT_ZOOM = 15;
     private static final int ENTRY_ZOOM = 13;
+
+    // static Park list holding Park object
+    private static ArrayList<Park> mapParkList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +102,14 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         FloatingActionButton FAB = (FloatingActionButton) findViewById(R.id.locate_me_fab);
         FAB.setOnClickListener(new locateMeFABListener());
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this); //service used to locate phone location
+
+        // park.json parsing
+        String parkUrl = "http://opendata.newwestcity.ca/downloads/parks/PARKS.json";
+        try {
+            new AsyncJSONParser().execute(new URL(parkUrl));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void onSearchForRoute() {
@@ -305,6 +319,23 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 //            i.putExtra("END_EXTRA", routeDetails.getDestn());
 //            i.putExtra("POLYLINE_EXTRA", routeDetails.getPolyline());
             drawRoute(route);
+        }
+    }
+
+    private class AsyncJSONParser extends AsyncTask<URL, Void, Void> {
+
+        @Override
+        protected Void doInBackground(URL... params) {
+            String jsonStr = HttpHelper.parseConnectionForString(params[0]);
+            try {
+                JSONArray parkJsonArray = new JSONArray(jsonStr);
+                mapParkList = HttpHelper.parseJSONArrayForParkDetails(parkJsonArray);
+                int count = mapParkList.size();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return null;
         }
     }
 }
