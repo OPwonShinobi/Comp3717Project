@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -30,6 +31,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -98,7 +100,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         Button routeBtn = (Button) findViewById(R.id.route_btn);
         routeBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                onSearchForRoute();
+                onSearchForRoute(false);
             }
         });
 
@@ -107,6 +109,14 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this); //service used to locate phone location
 
         addParkingMeterLocations();
+
+//        gMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+//            @Override
+//            public void onMapClick(LatLng latLng) {
+//                latLng.latitude;
+//                latLng.longitude;
+//            }
+//        });
     }
 
     public void addParkingMeterLocations() {
@@ -163,10 +173,14 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         }
     }
 
-    public void onSearchForRoute() {
+    public void onSearchForRoute(Boolean byMarker) {
         String srcLocation = start_et_address.getText().toString().trim();
         String destnLocation = end_et_address.getText().toString().trim();
         hideMyKeyboard();
+        if (byMarker == true){
+            start_et_address.setText("");
+            end_et_address.setText("");
+        }
 		if (!srcLocation.equals("") && !destnLocation.equals(""))
 		{
             String api_key = getResources().getString(R.string.api_key); //overloaded google_maps_key
@@ -253,6 +267,35 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 gotoMyLocation();
                 break;
         }
+        gMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+
+            @Override
+            public boolean onMarkerClick(final Marker marker) {
+                LatLng pos = marker.getPosition();
+                Log.d("", "latlong is : " + pos.latitude + " - " + pos.longitude);
+                getRouteToMarker(pos);
+                return true;
+            }
+        });
+    }
+
+    private void getRouteToMarker(LatLng latlng){
+        if (checkLocationPermission()) {
+            gMap.setMyLocationEnabled(true);
+        }
+
+//        double lat = gMap.getMyLocation().getLatitude();
+//        double lng = gMap.getMyLocation().getLongitude();
+//        Log.d("", "latlong is : " + lat + " - " + lng + " 2. " + latlng.latitude + "-" + latlng.longitude);
+        end_et_address.setText(latlng.latitude + "," + latlng.longitude);
+        start_et_address.setText("49.205681,-122.911256");
+        onSearchForRoute(true);
+    }
+
+    public boolean checkLocationPermission() {
+        String permission = "android.permission.ACCESS_FINE_LOCATION";
+        int res = this.checkCallingOrSelfPermission(permission);
+        return (res == PackageManager.PERMISSION_GRANTED);
     }
 
     public void onSearchForShoppingMalls() {
