@@ -65,9 +65,9 @@ public class HttpHelper {
         ArrayList<String> detailsAsObj = new ArrayList<>();
         JSONObject jsonObj = jsonArray.getJSONObject(0);
         detailsAsObj.add( jsonObj.getString("json_featuretype") );
-        detailsAsObj.add( jsonObj.getString("Y") );
-        detailsAsObj.add( jsonObj.getString("X") );
-        detailsAsObj.add( jsonObj.getString("Sign_Definition") );
+        //detailsAsObj.add( jsonObj.getString("Y") );
+        //detailsAsObj.add( jsonObj.getString("X") );
+        //detailsAsObj.add( jsonObj.getString("Sign_Definition") );
         detailsAsObj.add( String.valueOf(jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getInt(0)) ); //lat double
         detailsAsObj.add( String.valueOf(jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getInt(0)) ); //lon double
         return detailsAsObj;

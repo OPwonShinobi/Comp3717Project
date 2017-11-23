@@ -6,7 +6,9 @@ import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -39,6 +41,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -55,6 +58,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     private final LatLng mDefaultLocation = new LatLng(49.205681, -122.911256); //google places new west name above this coord
     private static final int DEFAULT_ZOOM = 15;
     private static final int ENTRY_ZOOM = 13;
+    private ArrayList<ParkingPayStations> parkingStationArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +100,61 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         FloatingActionButton FAB = (FloatingActionButton) findViewById(R.id.locate_me_fab);
         FAB.setOnClickListener(new locateMeFABListener());
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this); //service used to locate phone location
+
+        addParkingMeterLocations();
+    }
+
+    public void addParkingMeterLocations() {
+        parkingStationArray = new ArrayList<ParkingPayStations>();
+        parkingStationArray.add(new ParkingPayStations(49.20418453090815, -122.91340442716843));
+        parkingStationArray.add(new ParkingPayStations(49.204503225410704, -122.91281265611559));
+        parkingStationArray.add(new ParkingPayStations(49.20509807271738, -122.91171721680868));
+        parkingStationArray.add(new ParkingPayStations(49.20423556721974, -122.9117484874497));
+        parkingStationArray.add(new ParkingPayStations(49.20416647862545, -122.91131134034579));
+        parkingStationArray.add(new ParkingPayStations(49.20422632852543, -122.91090184461366));
+        parkingStationArray.add(new ParkingPayStations(49.2046369441439, -122.91045640704931));
+        parkingStationArray.add(new ParkingPayStations(49.2029516117076, -122.913878308475));
+        parkingStationArray.add(new ParkingPayStations(49.20233941773015, -122.91350467001372));
+        parkingStationArray.add(new ParkingPayStations(49.201883691629554, -122.91310258521297));
+        parkingStationArray.add(new ParkingPayStations(49.20116934356277, -122.91603671851404));
+        parkingStationArray.add(new ParkingPayStations(49.20081791760789, -122.91513065856175));
+        parkingStationArray.add(new ParkingPayStations(49.20286871325938, -122.91135581781107));
+        parkingStationArray.add(new ParkingPayStations(49.20341286844059, -122.91033816837748));
+        parkingStationArray.add(new ParkingPayStations(49.20391186560162, -122.90940215684569));
+        parkingStationArray.add(new ParkingPayStations(49.20189305910532, -122.91213580849457));
+        parkingStationArray.add(new ParkingPayStations(49.202418418071574, -122.91129563206509));
+        parkingStationArray.add(new ParkingPayStations(49.20248553924138, -122.91108742930871));
+        parkingStationArray.add(new ParkingPayStations(49.2020677907932, -122.91080462317406));
+        parkingStationArray.add(new ParkingPayStations(49.20209454389161, -122.91052455880765));
+        parkingStationArray.add(new ParkingPayStations(49.202093987366794, -122.91017724142871));
+        parkingStationArray.add(new ParkingPayStations(49.20244583919352, -122.90945911827548));
+        parkingStationArray.add(new ParkingPayStations(49.20379282809906, -122.90869160389644));
+        parkingStationArray.add(new ParkingPayStations(49.20389877855257, -122.90855657863104));
+        parkingStationArray.add(new ParkingPayStations(49.20384862620838, -122.90688017817034));
+        parkingStationArray.add(new ParkingPayStations(49.204025985450784, -122.90653695151327));
+        parkingStationArray.add(new ParkingPayStations(49.20522506548815, -122.90435531394584));
+        parkingStationArray.add(new ParkingPayStations(49.20551700850255, -122.90381556350756));
+        parkingStationArray.add(new ParkingPayStations(49.20531339367869, -122.90368603919241));
+        parkingStationArray.add(new ParkingPayStations(49.20493109896177, -122.90438982152513));
+    }
+
+    public void addParkingMeterMarker(LatLng endLatLong) {
+        Location parkingLocation = new Location("P1");
+        Location endLocation = new Location("P2");
+        float distance = 0;
+        for (int i = 0; i < parkingStationArray.size(); i++) {
+//          Location.distanceBetween(parkingStationArray.get(i).getLat(), parkingStationArray.get(i).getLon(), endLatLong.latitude, endLatLong.longitude, results);
+            parkingLocation.setLatitude(parkingStationArray.get(i).getLat());
+            parkingLocation.setLongitude(parkingStationArray.get(i).getLon());
+            endLocation.setLatitude(endLatLong.latitude);
+            endLocation.setLongitude(endLatLong.longitude);
+            distance = parkingLocation.distanceTo(endLocation);
+            Log.d("", "Location Distance is: " + distance);
+            // location distance is set to be 150m radius
+            if (distance <= 150) {
+                gMap.addMarker(new MarkerOptions().position(new LatLng(parkingStationArray.get(i).getLat(), parkingStationArray.get(i).getLon())).title("Parking").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+            }
+        }
     }
 
     public void onSearchForRoute() {
@@ -165,53 +224,15 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
     /**
      * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we
-     * just add a marker near Africa.
      */
     @Override
     public void onMapReady(GoogleMap map) {
-//        if (map == null) {
-//            // Try to obtain the map from the SupportMapFragment.
-//            SupportMapFragment mapFragment =
-//                    (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-//            mapFragment.getMapAsync(this);
-//
-//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-//                    == PackageManager.PERMISSION_GRANTED) {
-//                map.setMyLocationEnabled(true);
-//            } else {
-//                Toast.makeText(GoogleMapsActivity.this, "You have to accept to enjoy all app's services!", Toast.LENGTH_LONG).show();
-//                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-//                        == PackageManager.PERMISSION_GRANTED) {
-//                    map.setMyLocationEnabled(true);
-//                }
-//            }
-//
-//            if (map != null) {
-//                map.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
-//
-//                    @Override
-//                    public void onMyLocationChange(Location arg0) {
-//                        // TODO Auto-generated method stub
-//
-//                        CameraUpdate center= CameraUpdateFactory.newLatLng(new LatLng(arg0.getLatitude(), arg0.getLongitude()));
-//                        CameraUpdate zoom= CameraUpdateFactory.zoomTo(12);
-//
-//                        map.moveCamera(center);
-//                        map.animateCamera(zoom);
-//                    }
-//                });
-//
-//            }
-//        }
         gMap = map;
         if (map == null) {
             SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
             mapFragment.getMapAsync(this);
         }
         if (map != null) {
-            //why are we adding a marker off the coast of Africa???
-            //map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
             gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, ENTRY_ZOOM));
             //map.setMyLocationEnabled(true);
         }
@@ -241,6 +262,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         gMap.addMarker(new MarkerOptions().position(endAddress).title(endAddressStr));
 
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startAddress, DEFAULT_ZOOM));
+
+        addParkingMeterMarker(endAddress);
     }
 
     private void gotoMyLocation() {
@@ -307,4 +330,24 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             drawRoute(route);
         }
     }
+//
+//    private class AsyncParkingMeter extends AsyncTask<URL, Void, String> {
+//        @Override
+//        protected String doInBackground(URL... params) {
+//            return HttpHelper.parseConnectionForString(params[0]);
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String result) {
+//            Route route = null;
+//            try {
+//                route = HttpHelper.parseJSONArrayForParkingMeterDetails(new JSONObject(result));
+//            } catch (Exception e) {
+//                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur json", Toast.LENGTH_SHORT).show();
+//            }
+//            if (route == null) {
+//                return;
+//            }
+//        }
+//    }
 }
