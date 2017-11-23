@@ -55,10 +55,13 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     private EditText start_et_address;
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Location mLastKnownLocation; //will zoom to this on FAB click
+    private MarkerOptions mCurrentAddressMarker; //used to isolate current location marker
+
     private final LatLng mDefaultLocation = new LatLng(49.205681, -122.911256); //google places new west name above this coord
     private static final int DEFAULT_ZOOM = 15;
     private static final int ENTRY_ZOOM = 13;
     private ArrayList<ParkingPayStations> parkingStationArray;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,17 +145,19 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         Location parkingLocation = new Location("P1");
         Location endLocation = new Location("P2");
         float distance = 0;
+        endLocation.setLatitude(endLatLong.latitude);
+        endLocation.setLongitude(endLatLong.longitude);
         for (int i = 0; i < parkingStationArray.size(); i++) {
 //          Location.distanceBetween(parkingStationArray.get(i).getLat(), parkingStationArray.get(i).getLon(), endLatLong.latitude, endLatLong.longitude, results);
             parkingLocation.setLatitude(parkingStationArray.get(i).getLat());
             parkingLocation.setLongitude(parkingStationArray.get(i).getLon());
-            endLocation.setLatitude(endLatLong.latitude);
-            endLocation.setLongitude(endLatLong.longitude);
             distance = parkingLocation.distanceTo(endLocation);
             Log.d("", "Location Distance is: " + distance);
             // location distance is set to be 150m radius
             if (distance <= 150) {
-                gMap.addMarker(new MarkerOptions().position(new LatLng(parkingStationArray.get(i).getLat(), parkingStationArray.get(i).getLon())).title("Parking").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+                gMap.addMarker(new MarkerOptions().position(new LatLng(parkingStationArray.get(i).getLat(), parkingStationArray.get(i).getLon())).title("Parking").icon(
+                        BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                );
             }
         }
     }
@@ -213,11 +218,13 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             Address address = addressList.get(0);
             LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
             gMap.clear();
-            gMap.addMarker(new MarkerOptions().position(latLng).title("Marker"));
+            gMap.addMarker(new MarkerOptions().position(latLng).title(address.getAddressLine(0)).icon(
+                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+            );
+
             gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM));
-            //gMap.animateCamera(CameraUpdateFactory.zoomTo(5.0f));
         } else {
-            Toast t = Toast.makeText(this, "Please enter an address.", Toast.LENGTH_LONG);
+            Toast t = Toast.makeText(this, "Please enter a destination.", Toast.LENGTH_LONG);
             t.show();
         }
     }
@@ -248,18 +255,22 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         for (LatLng point : polylineCoordList) {
             routeOptions.add(point);
         }
-        routeOptions.color(Color.GREEN);
+        routeOptions.color(Color.BLUE);
         gMap.addPolyline(routeOptions);
 
         //add start marker
         String startAddressStr = route.getSrc(); //getIntent().getStringExtra("START_EXTRA");
         LatLng startAddress =  polylineCoordList.get(0);
-        gMap.addMarker(new MarkerOptions().position(startAddress).title(startAddressStr).flat(false));
+        gMap.addMarker(new MarkerOptions().position(startAddress).title(startAddressStr).icon(
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE))
+        );
 
         //add end marker
         String endAddressStr = route.getDestn(); //getIntent().getStringExtra("END_EXTRA");
         LatLng endAddress = polylineCoordList.get(polylineCoordList.size()-1);
-        gMap.addMarker(new MarkerOptions().position(endAddress).title(endAddressStr));
+        gMap.addMarker(new MarkerOptions().position(endAddress).title(endAddressStr).icon(
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+        );
 
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startAddress, DEFAULT_ZOOM));
 
@@ -282,9 +293,10 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                     // Set the map's camera position to the current location of the device.
                     mLastKnownLocation = task.getResult();
                     LatLng myLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
-                    gMap.clear();
+
                     gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLatLng, DEFAULT_ZOOM));
-                    gMap.addMarker(new MarkerOptions().position(myLatLng).title("You are here"));
+                    mCurrentAddressMarker = new MarkerOptions().position(myLatLng).title("You are here");
+                    gMap.addMarker(mCurrentAddressMarker);
                 } else {
                     Log.d("", "Current location is null. Using defaults.");
                     Log.e("", "Exception: %s", task.getException());
