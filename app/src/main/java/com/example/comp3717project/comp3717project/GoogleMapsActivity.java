@@ -31,6 +31,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -61,11 +62,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     private final LatLng mDefaultLocation = new LatLng(49.205681, -122.911256); //google places new west name above this coord
     private static final int DEFAULT_ZOOM = 15;
     private static final int ENTRY_ZOOM = 13;
+    private final int DEFAULT_PATH_WIDTH = 5;
     private ArrayList<ParkingPayStations> parkingStationArray;
-
-
-    // static Park list holding Park object
-    private static ArrayList<Park> mapParkList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -272,7 +270,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         // park.json parsing
         String parkUrl = "http://opendata.newwestcity.ca/downloads/parks/PARKS.json";
         try {
-            new AsyncJSONParser().execute(new URL(parkUrl));
+            new AsyncParkDownloader().execute(new URL(parkUrl));
         } catch (MalformedURLException e) {
             e.printStackTrace();
             String msg = parkUrl + "\nWarning, city URL badly formatted. Search aborted.";
@@ -290,6 +288,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         for (LatLng point : polylineCoordList) {
             routeOptions.add(point);
         }
+        routeOptions.width(DEFAULT_PATH_WIDTH);
         routeOptions.color(Color.BLUE);
         gMap.addPolyline(routeOptions);
 
@@ -342,51 +341,73 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     }
 
     private void markAllMallsOnMap(List<Mall> mallsList) {
-            Location mallLocation = new Location("P1");
-            Location referencePoint = new Location("P2");
-            referencePoint.setLatitude(mDefaultLocation.latitude);
-            referencePoint.setLongitude(mDefaultLocation.longitude);
+        Location mallLocation = new Location("P1");
+//        Location referencePoint = new Location("P2");
+//        referencePoint.setLatitude(mDefaultLocation.latitude);
+//        referencePoint.setLongitude(mDefaultLocation.longitude);
         for (Mall mall : mallsList) {
-                mallLocation.setLatitude(Double.parseDouble(mall.getLatitude()));
-                mallLocation.setLongitude(Double.parseDouble(mall.getLongitude()));
-                float distance = mallLocation.distanceTo(referencePoint);
-                Log.d("", "Location Distance is: " + distance);
-                // location distance is disabled for now
+            mallLocation.setLatitude(Double.parseDouble(mall.getLatitude()));
+            mallLocation.setLongitude(Double.parseDouble(mall.getLongitude()));
+//            float distance = mallLocation.distanceTo(referencePoint);
+            // location distance is disabled for now
 //                if (distance <= 150) {
-                    gMap.addMarker(new MarkerOptions()
-                            .position(new LatLng(mallLocation.getLatitude(), mallLocation.getLongitude()))
-                            .title(mall.getName())
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                    );
+                gMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(mallLocation.getLatitude(), mallLocation.getLongitude()))
+                        .title(mall.getName())
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                );
 //                }
-            }
-    }
-
-    private void markAllParksOnMap() {
-        if (mapParkList.size() != 0) {
-            for (Park park : mapParkList) {
-                String location = park.getStrNum() + " " + park.getStrName() + ", New Westminster, CA";
-                List<Address> addressList = null;
-
-                if(!location.equals(""))
-                {
-                    Geocoder geocoder = new Geocoder(this);
-                    try {
-                        addressList = geocoder.getFromLocationName(location, 1);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    Address address = addressList.get(0);
-                    LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-                    gMap.addMarker(new MarkerOptions()
-                            .position(latLng)
-                            .title(park.getParkName())
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-                }
-            }
         }
     }
+
+    private void markAllParksOnMap(ArrayList<Park> mapParkList) {
+        for (Park park : mapParkList) {
+            String parkName = park.getParkName();
+            String polylineStr = park.getStrPolyline();
+            List<LatLng> polylineCoords = PolyUtil.decode(polylineStr);
+
+            LatLng tentativeAddress = polylineCoords.get(0);
+            gMap.addMarker(new MarkerOptions()
+                .position(tentativeAddress)
+                .title(parkName)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+            );
+
+            PolygonOptions parkBorderOptions = new PolygonOptions();
+            for (LatLng coord : polylineCoords) {
+                parkBorderOptions.add(coord);
+            }
+            parkBorderOptions.strokeWidth(DEFAULT_PATH_WIDTH);
+            parkBorderOptions.strokeColor(Color.rgb(0, 153, 51)); //med green
+            parkBorderOptions.fillColor(Color.argb(75, 153, 255, 102)); //light green
+            gMap.addPolygon(parkBorderOptions);
+        }
+    }
+
+    //inefficient
+//    private void markAllParksOnMap(ArrayList<Park> mapParkList) {
+//        for (Park park : mapParkList) {
+//            String location = park.getStrNum() + " " + park.getStrName() + ", New Westminster, CA";
+//            List<Address> addressList = null;
+//
+//            if(!location.equals(""))
+//            {
+//                Geocoder geocoder = new Geocoder(this);
+//                try {
+//                    addressList = geocoder.getFromLocationName(location, 1);
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//
+//                Address address = addressList.get(0);
+//                LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+//                gMap.addMarker(new MarkerOptions()
+//                        .position(latLng)
+//                        .title(park.getParkName())
+//                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+//            }
+//        }
+//    }
 
     private class locateMeFABListener implements View.OnClickListener {
         @Override
@@ -430,9 +451,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         protected void onPostExecute(String result) {
             List<Mall> mallsList = null;
             try {
-                mallsList = HttpHelper.parseJSONObjectForShoppingMalls(new JSONArray(result));
+                mallsList = HttpHelper.parseJSONArrayForShoppingMalls(new JSONArray(result));
             } catch (Exception e) {
-                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur json", Toast.LENGTH_SHORT).show();
+                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur malls json", Toast.LENGTH_SHORT).show();
             }
             if (mallsList == null) {
                 return;
@@ -454,15 +475,15 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 //            try {
 //                route = HttpHelper.parseJSONArrayForParkingMeterDetails(new JSONObject(result));
 //            } catch (Exception e) {
-//                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur json", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur parking meter json", Toast.LENGTH_SHORT).show();
 //            }
 //            if (route == null) {
 //                return;
 //            }
 //        }
 //    }
-
-    private class AsyncJSONParser extends AsyncTask<URL, Void, Void> {
+    private class AsyncParkDownloader extends AsyncTask<URL, Void, Void> {
+        private ArrayList<Park> mapParkList;
 
         @Override
         protected Void doInBackground(URL... params) {
@@ -472,16 +493,55 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 mapParkList = HttpHelper.parseJSONArrayForParkDetails(parkJsonArray);
             } catch (JSONException e) {
                 e.printStackTrace();
-                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur json", Toast.LENGTH_SHORT).show();
+                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur parks json", Toast.LENGTH_SHORT).show();
             }
-
             return null;
         }
 
         @Override
         protected void onPostExecute(Void result) {
-            markAllParksOnMap();
-            //drawRoute(route);
+            markAllParksOnMap(mapParkList);
         }
     }
+//    private class AsyncParkDownloader extends AsyncTask<URL, Void, String> {
+//        @Override
+//        protected String doInBackground(URL... params) {
+//            return HttpHelper.parseConnectionForString(params[0]);
+//        }
+//        @Override
+//        protected void onPostExecute(String result) {
+//            ArrayList<Park> mapParkList = null;
+//            try {
+//                JSONArray parkJsonArray = new JSONArray(result);
+//                mapParkList = HttpHelper.parseJSONArrayForParkDetails(parkJsonArray);
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur parks json", Toast.LENGTH_SHORT).show();
+//            }
+//            markAllParksOnMap(mapParkList);
+//        }
+//    }
+
+//    private class AsyncJSONParser extends AsyncTask<URL, Void, String> {
+//        @Override
+//        protected Void doInBackground(URL... params) {
+//            String jsonStr = HttpHelper.parseConnectionForString(params[0]);
+//            ArrayList<Park> mapParkList = new ArrayList<>();
+//            try {
+//                JSONArray parkJsonArray = new JSONArray(jsonStr);
+//                mapParkList = HttpHelper.parseJSONArrayForParkDetails(parkJsonArray);
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur json", Toast.LENGTH_SHORT).show();
+//            }
+//
+//            return null;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Void result) {
+//            markAllParksOnMap();
+//            //drawRoute(route);
+//        }
+//    }
 }

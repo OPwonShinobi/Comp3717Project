@@ -1,5 +1,7 @@
 package com.example.comp3717project.comp3717project;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -60,16 +62,17 @@ public class HttpHelper {
         }
         return result;
     }
+
     //parking_meters.json objects
     public static ArrayList parseJSONArrayForParkingMeterDetails(JSONArray jsonArray) throws JSONException {
         ArrayList<String> detailsAsObj = new ArrayList<>();
         JSONObject jsonObj = jsonArray.getJSONObject(0);
-        detailsAsObj.add( jsonObj.getString("json_featuretype") );
+        detailsAsObj.add(jsonObj.getString("json_featuretype"));
         //detailsAsObj.add( jsonObj.getString("Y") );
         //detailsAsObj.add( jsonObj.getString("X") );
         //detailsAsObj.add( jsonObj.getString("Sign_Definition") );
-        detailsAsObj.add( String.valueOf(jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getInt(0)) ); //lat double
-        detailsAsObj.add( String.valueOf(jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getInt(0)) ); //lon double
+        detailsAsObj.add(String.valueOf(jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getInt(0))); //lat double
+        detailsAsObj.add(String.valueOf(jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getInt(0))); //lon double
         return detailsAsObj;
     }
 
@@ -93,10 +96,10 @@ public class HttpHelper {
     }
 
 
-    public static ArrayList parseJSONObjectForShoppingMalls(JSONArray jsonArr) throws JSONException {
+    public static ArrayList parseJSONArrayForShoppingMalls(JSONArray jsonArr) throws JSONException {
         if (jsonArr != null) {
             ArrayList<Mall> mallsList = new ArrayList<>();
-            for(int i = 0; i < jsonArr.length(); ++i) {
+            for (int i = 0; i < jsonArr.length(); ++i) {
                 JSONObject mall = jsonArr.getJSONObject(i);
                 String name = mall.getString("BLDGNAM");
                 String lon = mall.getString("X");
@@ -111,16 +114,34 @@ public class HttpHelper {
     // parsing json array for parks.json and return the ArrayList
     public static ArrayList parseJSONArrayForParkDetails(JSONArray jsonArray) throws JSONException {
         ArrayList<Park> parkList = new ArrayList<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject parkJsonObj = jsonArray.getJSONObject(i);
-            Park park = new Park(
-                    parkJsonObj.getString("Name"),
-                    parkJsonObj.getString("StrName"),
-                    parkJsonObj.getString("StrNum"),
-                    parkJsonObj.getString("Category")
+        try {
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject parkJsonObj = jsonArray.getJSONObject(i);
+                Park park = new Park(
+                        parkJsonObj.getString("Name"),
+                        parkJsonObj.getString("StrName"), //this could be null
+                        parkJsonObj.getString("StrNum"), //idk y u need this
+                        parkJsonObj.getString("Category") //or this
                 );
-            parkList.add(park);
+                //set border info (includes address)
+                JSONArray coordList = parkJsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getJSONArray(0);
+                ArrayList<LatLng> polygonCoords = new ArrayList<>();
+                for (int j = 0; j < coordList.length(); j++) {
+                    JSONArray latLngPair = coordList.getJSONArray(j);
+                    double lon = latLngPair.getDouble(0);
+                    double lat = latLngPair.getDouble(1);
+                    polygonCoords.add(new LatLng(lat, lon));
+                }
+                String polylineStr = PolyUtil.encode(polygonCoords);
+                park.setStrPolyline(polylineStr);
+
+                parkList.add(park);
+            }
+        } catch (Exception e) {
+            int i = 0;
         }
+        int i = 0;
         return parkList;
     }
+
 }

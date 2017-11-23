@@ -7,10 +7,8 @@ public class Park {
     private String strName;
     private String strNum;
     private String category;
+    private String strPolyline;
     //private List<List<Double>> coordList; // in [longitude, latitude];
-
-    private Park() {
-    }
 
     public Park(String parkName, String strName, String strNum, String category) {
         this.parkName = parkName;
@@ -33,8 +31,15 @@ public class Park {
     public String getCategory() {
         return category;
     }
-    public List<List<Double>> getCoordList() {
-        //return coordList;
-        return null;
+//    public List<List<Double>> getCoordList() {
+//        //return coordList;
+//        return null;
+//    }
+    public String getStrPolyline() {
+        return strPolyline;
+    }
+
+    public void setStrPolyline(String strPolyline) {
+        this.strPolyline = strPolyline;
     }
 }
