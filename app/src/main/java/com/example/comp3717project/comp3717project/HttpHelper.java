@@ -107,4 +107,20 @@ public class HttpHelper {
         }
         return null;
     }
+
+    // parsing json array for parks.json and return the ArrayList
+    public static ArrayList parseJSONArrayForParkDetails(JSONArray jsonArray) throws JSONException {
+        ArrayList<Park> parkList = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject parkJsonObj = jsonArray.getJSONObject(i);
+            Park park = new Park(
+                    parkJsonObj.getString("Name"),
+                    parkJsonObj.getString("StrName"),
+                    parkJsonObj.getString("StrNum"),
+                    parkJsonObj.getString("Category")
+                );
+            parkList.add(park);
+        }
+        return parkList;
+    }
 }

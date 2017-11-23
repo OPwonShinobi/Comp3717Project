@@ -36,9 +36,11 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +63,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     private static final int ENTRY_ZOOM = 13;
     private ArrayList<ParkingPayStations> parkingStationArray;
 
+
+    // static Park list holding Park object
+    private static ArrayList<Park> mapParkList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -244,6 +249,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 onSearchForShoppingMalls();
                 break;
             case 3 : //get all parks
+                onSearchForParks();
                 break;
             case 4 : //exceptional, fab clicked goto own address\\
                 gotoMyLocation();
@@ -258,6 +264,18 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             new AsyncShoppingMallDownloader().execute(new URL(url));
         } catch(IOException ioe) {
             String msg = url + "\nWarning, city URL badly formatted. Search aborted.";
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void onSearchForParks() {
+        // park.json parsing
+        String parkUrl = "http://opendata.newwestcity.ca/downloads/parks/PARKS.json";
+        try {
+            new AsyncJSONParser().execute(new URL(parkUrl));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            String msg = parkUrl + "\nWarning, city URL badly formatted. Search aborted.";
             Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
         }
     }
@@ -344,6 +362,32 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             }
     }
 
+    private void markAllParksOnMap() {
+        if (mapParkList.size() != 0) {
+            for (Park park : mapParkList) {
+                String location = park.getStrNum() + " " + park.getStrName() + ", New Westminster, CA";
+                List<Address> addressList = null;
+
+                if(!location.equals(""))
+                {
+                    Geocoder geocoder = new Geocoder(this);
+                    try {
+                        addressList = geocoder.getFromLocationName(location, 1);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    Address address = addressList.get(0);
+                    LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+                    gMap.addMarker(new MarkerOptions()
+                            .position(latLng)
+                            .title(park.getParkName())
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+                }
+            }
+        }
+    }
+
     private class locateMeFABListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
@@ -417,4 +461,27 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 //            }
 //        }
 //    }
+
+    private class AsyncJSONParser extends AsyncTask<URL, Void, Void> {
+
+        @Override
+        protected Void doInBackground(URL... params) {
+            String jsonStr = HttpHelper.parseConnectionForString(params[0]);
+            try {
+                JSONArray parkJsonArray = new JSONArray(jsonStr);
+                mapParkList = HttpHelper.parseJSONArrayForParkDetails(parkJsonArray);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur json", Toast.LENGTH_SHORT).show();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            markAllParksOnMap();
+            //drawRoute(route);
+        }
+    }
 }
