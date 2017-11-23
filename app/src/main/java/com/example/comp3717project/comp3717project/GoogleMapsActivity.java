@@ -80,7 +80,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         mapFragment.newInstance(options);
 
         Intent myIntent = getIntent(); // gets the previously created intent
-        String firstKeyName = myIntent.getStringExtra("MyMessage"); //Passed intent variable
+        String firstKeyName = myIntent.getStringExtra("DEST_ADDRESS_EXTRA"); //Passed intent variable
 
         end_et_address = (EditText) findViewById(R.id.destination_address_edit_text);
         end_et_address.setText(firstKeyName);
@@ -197,8 +197,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     public void onSearchForDestination() {
         String location = end_et_address.getText().toString();
         List<Address> addressList = null;
-
-        //moves keyboard away without clicking back
         hideMyKeyboard();
 
         //location will never be null unless et_address is not found roger!
@@ -229,19 +227,29 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         }
     }
 
-    /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     */
     @Override
     public void onMapReady(GoogleMap map) {
         gMap = map;
         if (map == null) {
             SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-            mapFragment.getMapAsync(this);
+            mapFragment.getMapAsync(this); // this could result in an infinite loop if map is always null
         }
         if (map != null) {
             gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, ENTRY_ZOOM));
-            //map.setMyLocationEnabled(true);
+        }
+        int intentActionID = getIntent().getIntExtra("SELECTED_ACTION_EXTRA", 0); //0: nothing, 1 address, 2 shop, 3 park
+        switch (intentActionID) {
+            case 1 : //entered address
+                onSearchForDestination();
+                break;
+            case 2 : //get all shopping malls
+
+                break;
+            case 3 : //get all parks
+                break;
+            case 4 : //exceptional, fab clicked goto own address\\
+                gotoMyLocation();
+                break;
         }
     }
 
@@ -334,11 +342,27 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             if (route == null) {
                 return;
             }
-            //Intent i = new Intent(GoogleMapsActivity.this, MainActivity.class);
-//            Intent i = getIntent();
-//            i.putExtra("START_EXTRA", routeDetails.getSrc());
-//            i.putExtra("END_EXTRA", routeDetails.getDestn());
-//            i.putExtra("POLYLINE_EXTRA", routeDetails.getPolyline());
+            drawRoute(route);
+        }
+    }
+
+    private class AsyncShoppingMallDownloader extends AsyncTask<URL, Void, String> {
+        @Override
+        protected String doInBackground(URL... params) {
+            return HttpHelper.parseConnectionForString(params[0]);
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Route route = null;
+            try {
+                route = HttpHelper.parseJSONObjectForDirections(new JSONObject(result));
+            } catch (Exception e) {
+                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur json", Toast.LENGTH_SHORT).show();
+            }
+            if (route == null) {
+                return;
+            }
             drawRoute(route);
         }
     }

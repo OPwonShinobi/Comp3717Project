@@ -115,17 +115,7 @@ public class MainActivity extends AppCompatActivity {
         FAB.setOnClickListener(new tempFABListener());
     }
 
-    public void StartMap(View view, String message){
-//        double latitude = 40.714728;
-//        double longitude = -73.998672;
-//        String label = "ABC Label";
-//        String uriBegin = "geo:" + latitude + "," + longitude;
-//        String query = latitude + "," + longitude + "(" + label + ")";
-//        String encodedQuery = Uri.encode(query);
-//        String uriString = uriBegin + "?q=" + encodedQuery + "&z=16";
-        //Uri uri = Uri.parse(uriString);
-        //Intent intent = new Intent(android.activity, uri);
-        //startActivity(intent);
+    public void StartMap(View view, String destnAddress){
         switch (purpose) {
             case SHOPPING:
                 // call JSONHandler constructor for shopping
@@ -136,23 +126,18 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Intent intent = new Intent(this, GoogleMapsActivity.class);
-        intent.putExtra("MyMessage", message);
+        intent.putExtra("DEST_ADDRESS_EXTRA", destnAddress);
+        intent.putExtra("SELECTED_ACTION_EXTRA", mainSpinner.getSelectedItemPosition());
         startActivity(intent);
     }
 
     private class tempFABListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
-            String msg = "Placeholder text.";
-            Snackbar allahu = Snackbar.make(findViewById(R.id.container), msg, Snackbar.LENGTH_LONG);
-            allahu.setAction("Undo", new View.OnClickListener(){
-                @Override
-                public void onClick(View view) {
-                    Toast burnt = Toast.makeText(MainActivity.this, "Undid.", Toast.LENGTH_LONG);
-                    burnt.show();
-                }
-            });
-            allahu.show();
+            Intent intent = new Intent(MainActivity.this, GoogleMapsActivity.class);
+            intent.putExtra("DEST_ADDRESS_EXTRA", "");
+            intent.putExtra("SELECTED_ACTION_EXTRA", 4); //exceptional case
+            startActivity(intent);
         }
     }
 }
