@@ -91,4 +91,20 @@ public class HttpHelper {
         }
         return null;
     }
+
+
+    public static ArrayList parseJSONObjectForShoppingMalls(JSONArray jsonArr) throws JSONException {
+        if (jsonArr != null) {
+            ArrayList<Mall> mallsList = new ArrayList<>();
+            for(int i = 0; i < jsonArr.length(); ++i) {
+                JSONObject mall = jsonArr.getJSONObject(i);
+                String name = mall.getString("BLDGNAM");
+                String lon = mall.getString("X");
+                String lat = mall.getString("Y");
+                mallsList.add(new Mall(name, lon, lat));
+            }
+            return mallsList;
+        }
+        return null;
+    }
 }

@@ -37,6 +37,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -141,17 +142,16 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         parkingStationArray.add(new ParkingPayStations(49.20493109896177, -122.90438982152513));
     }
 
-    public void addParkingMeterMarker(LatLng endLatLong) {
+    public void addParkingMeterMarkers(LatLng endLatLong) {
         Location parkingLocation = new Location("P1");
         Location endLocation = new Location("P2");
-        float distance = 0;
         endLocation.setLatitude(endLatLong.latitude);
         endLocation.setLongitude(endLatLong.longitude);
         for (int i = 0; i < parkingStationArray.size(); i++) {
 //          Location.distanceBetween(parkingStationArray.get(i).getLat(), parkingStationArray.get(i).getLon(), endLatLong.latitude, endLatLong.longitude, results);
             parkingLocation.setLatitude(parkingStationArray.get(i).getLat());
             parkingLocation.setLongitude(parkingStationArray.get(i).getLon());
-            distance = parkingLocation.distanceTo(endLocation);
+            float distance = parkingLocation.distanceTo(endLocation);
             Log.d("", "Location Distance is: " + distance);
             // location distance is set to be 150m radius
             if (distance <= 150) {
@@ -243,13 +243,24 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 onSearchForDestination();
                 break;
             case 2 : //get all shopping malls
-
+                onSearchForShoppingMalls();
                 break;
             case 3 : //get all parks
                 break;
             case 4 : //exceptional, fab clicked goto own address\\
                 gotoMyLocation();
                 break;
+        }
+    }
+
+    public void onSearchForShoppingMalls() {
+        //400+ lines of unindented mess
+        String url = "http://opendata.newwestcity.ca/downloads/major-shopping/MAJOR_SHOPPING.json";
+        try {
+            new AsyncShoppingMallDownloader().execute(new URL(url));
+        } catch(IOException ioe) {
+            String msg = url + "\nWarning, city URL badly formatted. Search aborted.";
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -282,7 +293,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startAddress, DEFAULT_ZOOM));
 
-        addParkingMeterMarker(endAddress);
+        addParkingMeterMarkers(endAddress);
     }
 
     private void gotoMyLocation() {
@@ -312,6 +323,27 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 }
             }
         });
+    }
+
+    private void markAllMallsOnMap(List<Mall> mallsList) {
+            Location mallLocation = new Location("P1");
+            Location referencePoint = new Location("P2");
+            referencePoint.setLatitude(mDefaultLocation.latitude);
+            referencePoint.setLongitude(mDefaultLocation.longitude);
+        for (Mall mall : mallsList) {
+                mallLocation.setLatitude(Double.parseDouble(mall.getLatitude()));
+                mallLocation.setLongitude(Double.parseDouble(mall.getLongitude()));
+                float distance = mallLocation.distanceTo(referencePoint);
+                Log.d("", "Location Distance is: " + distance);
+                // location distance is disabled for now
+//                if (distance <= 150) {
+                    gMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(mallLocation.getLatitude(), mallLocation.getLongitude()))
+                            .title(mall.getName())
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                    );
+//                }
+            }
     }
 
     private class locateMeFABListener implements View.OnClickListener {
@@ -354,16 +386,17 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
         @Override
         protected void onPostExecute(String result) {
-            Route route = null;
+            List<Mall> mallsList = null;
             try {
-                route = HttpHelper.parseJSONObjectForDirections(new JSONObject(result));
+                mallsList = HttpHelper.parseJSONObjectForShoppingMalls(new JSONArray(result));
             } catch (Exception e) {
                 Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur json", Toast.LENGTH_SHORT).show();
             }
-            if (route == null) {
+            if (mallsList == null) {
                 return;
             }
-            drawRoute(route);
+            markAllMallsOnMap(mallsList);
+            //drawRoute(route);
         }
     }
 //
