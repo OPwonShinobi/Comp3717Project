@@ -63,17 +63,38 @@ public class HttpHelper {
         return result;
     }
 
+    //parking_station.json objects
+    public static ArrayList parseJSONArrayForParkingPayStationDetails(JSONArray jsonArray) throws JSONException {
+        if (jsonArray != null) {
+            ArrayList<ParkingLot> detailsAsObj = new ArrayList<>();
+            for (int i = 0; i < jsonArray.length(); ++i) {
+                JSONObject ParkingStation = jsonArray.getJSONObject(i);
+                String name = ParkingStation.getString("STATIONID");
+                JSONArray coordList = ParkingStation.getJSONObject("json_geometry").getJSONArray("coordinates");
+                double lon = coordList.getDouble(0);
+                double lat = coordList.getDouble(1);
+                detailsAsObj.add(new ParkingLot(name, lat, lon));
+            }
+            return detailsAsObj;
+        }
+        return null;
+    }
+
     //parking_meters.json objects
     public static ArrayList parseJSONArrayForParkingMeterDetails(JSONArray jsonArray) throws JSONException {
-        ArrayList<String> detailsAsObj = new ArrayList<>();
-        JSONObject jsonObj = jsonArray.getJSONObject(0);
-        detailsAsObj.add(jsonObj.getString("json_featuretype"));
-        //detailsAsObj.add( jsonObj.getString("Y") );
-        //detailsAsObj.add( jsonObj.getString("X") );
-        //detailsAsObj.add( jsonObj.getString("Sign_Definition") );
-        detailsAsObj.add(String.valueOf(jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getInt(0))); //lat double
-        detailsAsObj.add(String.valueOf(jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getInt(0))); //lon double
-        return detailsAsObj;
+        if (jsonArray != null) {
+            ArrayList<ParkingLot> detailsAsObj = new ArrayList<>();
+            for (int i = 0; i < jsonArray.length(); ++i) {
+                JSONObject jsonObj = jsonArray.getJSONObject(i);
+                String name =  jsonObj.getString("Sign_ID");
+                JSONArray coordList = jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates");
+                double lon = coordList.getDouble(0);
+                double lat = coordList.getDouble(1);
+                detailsAsObj.add(new ParkingLot(name, lat, lon));
+            }
+            return detailsAsObj;
+        }
+        return null;
     }
 
     //navigate route response json like this
@@ -114,33 +135,28 @@ public class HttpHelper {
     // parsing json array for parks.json and return the ArrayList
     public static ArrayList parseJSONArrayForParkDetails(JSONArray jsonArray) throws JSONException {
         ArrayList<Park> parkList = new ArrayList<>();
-        try {
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject parkJsonObj = jsonArray.getJSONObject(i);
-                Park park = new Park(
-                        parkJsonObj.getString("Name"),
-                        parkJsonObj.getString("StrName"), //this could be null
-                        parkJsonObj.getString("StrNum"), //idk y u need this
-                        parkJsonObj.getString("Category") //or this
-                );
-                //set border info (includes address)
-                JSONArray coordList = parkJsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getJSONArray(0);
-                ArrayList<LatLng> polygonCoords = new ArrayList<>();
-                for (int j = 0; j < coordList.length(); j++) {
-                    JSONArray latLngPair = coordList.getJSONArray(j);
-                    double lon = latLngPair.getDouble(0);
-                    double lat = latLngPair.getDouble(1);
-                    polygonCoords.add(new LatLng(lat, lon));
-                }
-                String polylineStr = PolyUtil.encode(polygonCoords);
-                park.setStrPolyline(polylineStr);
-
-                parkList.add(park);
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject parkJsonObj = jsonArray.getJSONObject(i);
+            Park park = new Park(
+                    parkJsonObj.getString("Name"),
+                    parkJsonObj.getString("StrName"), //this could be null
+                    parkJsonObj.getString("StrNum"), //idk y u need this
+                    parkJsonObj.getString("Category") //or this
+            );
+            //set border info (includes address)
+            JSONArray coordList = parkJsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getJSONArray(0);
+            ArrayList<LatLng> polygonCoords = new ArrayList<>();
+            for (int j = 0; j < coordList.length(); j++) {
+                JSONArray latLngPair = coordList.getJSONArray(j);
+                double lon = latLngPair.getDouble(0);
+                double lat = latLngPair.getDouble(1);
+                polygonCoords.add(new LatLng(lat, lon));
             }
-        } catch (Exception e) {
-            int i = 0;
+            String polylineStr = PolyUtil.encode(polygonCoords);
+            park.setStrPolyline(polylineStr);
+
+            parkList.add(park);
         }
-        int i = 0;
         return parkList;
     }
 

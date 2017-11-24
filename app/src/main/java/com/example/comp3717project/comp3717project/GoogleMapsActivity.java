@@ -1,6 +1,5 @@
 package com.example.comp3717project.comp3717project;
 
-import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -8,12 +7,10 @@ import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -68,7 +65,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     private static final int DEFAULT_ZOOM = 17;
     private static final int ENTRY_ZOOM = 13;
     private final int DEFAULT_PATH_WIDTH = 5;
-    private ArrayList<ParkingPayStations> parkingStationArray;
+    private ArrayList<ParkingLot> parkingPayStationList;
+    private ArrayList<ParkingLot> parkingMetersList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,7 +101,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         Button routeBtn = (Button) findViewById(R.id.route_btn);
         routeBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                onSearchForRoute(false);
+                onSearchForRoute();
             }
         });
 
@@ -111,7 +109,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         FAB.setOnClickListener(new locateMeFABListener());
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this); //service used to locate phone location
 
-        addParkingMeterLocations(); //added to global, not to map
+        //addParkingMeterLocations(); //added to global, not to map
     }
 
  	@Override
@@ -124,6 +122,18 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         if (map != null) {
             gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, ENTRY_ZOOM));
         }
+
+        //get park paystations on start up, and add it to a global
+        String parkingPayStationURL = "http://opendata.newwestcity.ca/downloads/parking-pay-stations/PARKING_PAY_STATIONS.json";
+        String parkingMeterURL = "http://opendata.newwestcity.ca/downloads/parking-meters/PARKING_METERS.json";
+        try {
+            new AsyncParkingLotDownloader().execute(new URL(parkingPayStationURL), new URL(parkingMeterURL));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            String msg = parkingPayStationURL + "\nWarning, city URL badly formatted. Search aborted.";
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+        }
+
         int intentActionID = getIntent().getIntExtra("SELECTED_ACTION_EXTRA", 0); //0: nothing, 1 address, 2 shop, 3 park
         switch (intentActionID) {
             case 1 : //entered address
@@ -188,81 +198,91 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         AlertDialog b = dialogBuilder.create();
         b.show();
     }
- 	private void getRouteToMarker(LatLng latlng){
-        if (checkLocationPermission()) {
-            gMap.setMyLocationEnabled(true);
-        }
-        end_et_address.setText(latlng.latitude + "," + latlng.longitude);
-        start_et_address.setText("49.205681,-122.911256"); //not ok
-        onSearchForRoute(true);
-    }
+// 	private void getRouteToMarker(LatLng latlng){
+//        if (checkLocationPermission()) {
+//            gMap.setMyLocationEnabled(true);
+//        }
+//        end_et_address.setText(latlng.latitude + "," + latlng.longitude);
+//        start_et_address.setText("49.205681,-122.911256"); //not ok
+//        onSearchForRoute(true);
+//    }
 
     /*these are parking pay stations, not parking meters!
 		due to being way too slow if parsed in, using hard-coded coordinates for demo
     */
-    public void addParkingMeterLocations() {
-        parkingStationArray = new ArrayList<ParkingPayStations>();
-        parkingStationArray.add(new ParkingPayStations(49.20418453090815, -122.91340442716843));
-        parkingStationArray.add(new ParkingPayStations(49.204503225410704, -122.91281265611559));
-        parkingStationArray.add(new ParkingPayStations(49.20509807271738, -122.91171721680868));
-        parkingStationArray.add(new ParkingPayStations(49.20423556721974, -122.9117484874497));
-        parkingStationArray.add(new ParkingPayStations(49.20416647862545, -122.91131134034579));
-        parkingStationArray.add(new ParkingPayStations(49.20422632852543, -122.91090184461366));
-        parkingStationArray.add(new ParkingPayStations(49.2046369441439, -122.91045640704931));
-        parkingStationArray.add(new ParkingPayStations(49.2029516117076, -122.913878308475));
-        parkingStationArray.add(new ParkingPayStations(49.20233941773015, -122.91350467001372));
-        parkingStationArray.add(new ParkingPayStations(49.201883691629554, -122.91310258521297));
-        parkingStationArray.add(new ParkingPayStations(49.20116934356277, -122.91603671851404));
-        parkingStationArray.add(new ParkingPayStations(49.20081791760789, -122.91513065856175));
-        parkingStationArray.add(new ParkingPayStations(49.20286871325938, -122.91135581781107));
-        parkingStationArray.add(new ParkingPayStations(49.20341286844059, -122.91033816837748));
-        parkingStationArray.add(new ParkingPayStations(49.20391186560162, -122.90940215684569));
-        parkingStationArray.add(new ParkingPayStations(49.20189305910532, -122.91213580849457));
-        parkingStationArray.add(new ParkingPayStations(49.202418418071574, -122.91129563206509));
-        parkingStationArray.add(new ParkingPayStations(49.20248553924138, -122.91108742930871));
-        parkingStationArray.add(new ParkingPayStations(49.2020677907932, -122.91080462317406));
-        parkingStationArray.add(new ParkingPayStations(49.20209454389161, -122.91052455880765));
-        parkingStationArray.add(new ParkingPayStations(49.202093987366794, -122.91017724142871));
-        parkingStationArray.add(new ParkingPayStations(49.20244583919352, -122.90945911827548));
-        parkingStationArray.add(new ParkingPayStations(49.20379282809906, -122.90869160389644));
-        parkingStationArray.add(new ParkingPayStations(49.20389877855257, -122.90855657863104));
-        parkingStationArray.add(new ParkingPayStations(49.20384862620838, -122.90688017817034));
-        parkingStationArray.add(new ParkingPayStations(49.204025985450784, -122.90653695151327));
-        parkingStationArray.add(new ParkingPayStations(49.20522506548815, -122.90435531394584));
-        parkingStationArray.add(new ParkingPayStations(49.20551700850255, -122.90381556350756));
-        parkingStationArray.add(new ParkingPayStations(49.20531339367869, -122.90368603919241));
-        parkingStationArray.add(new ParkingPayStations(49.20493109896177, -122.90438982152513));
-    }
+//    public void addParkingMeterLocations() {
+//        parkingStationArray = new ArrayList<ParkingPayStation>();
+//        parkingStationArray.add(new ParkingPayStation(49.20418453090815, -122.91340442716843));
+//        parkingStationArray.add(new ParkingPayStation(49.204503225410704, -122.91281265611559));
+//        parkingStationArray.add(new ParkingPayStation(49.20509807271738, -122.91171721680868));
+//        parkingStationArray.add(new ParkingPayStation(49.20423556721974, -122.9117484874497));
+//        parkingStationArray.add(new ParkingPayStation(49.20416647862545, -122.91131134034579));
+//        parkingStationArray.add(new ParkingPayStation(49.20422632852543, -122.91090184461366));
+//        parkingStationArray.add(new ParkingPayStation(49.2046369441439, -122.91045640704931));
+//        parkingStationArray.add(new ParkingPayStation(49.2029516117076, -122.913878308475));
+//        parkingStationArray.add(new ParkingPayStation(49.20233941773015, -122.91350467001372));
+//        parkingStationArray.add(new ParkingPayStation(49.201883691629554, -122.91310258521297));
+//        parkingStationArray.add(new ParkingPayStation(49.20116934356277, -122.91603671851404));
+//        parkingStationArray.add(new ParkingPayStation(49.20081791760789, -122.91513065856175));
+//        parkingStationArray.add(new ParkingPayStation(49.20286871325938, -122.91135581781107));
+//        parkingStationArray.add(new ParkingPayStation(49.20341286844059, -122.91033816837748));
+//        parkingStationArray.add(new ParkingPayStation(49.20391186560162, -122.90940215684569));
+//        parkingStationArray.add(new ParkingPayStation(49.20189305910532, -122.91213580849457));
+//        parkingStationArray.add(new ParkingPayStation(49.202418418071574, -122.91129563206509));
+//        parkingStationArray.add(new ParkingPayStation(49.20248553924138, -122.91108742930871));
+//        parkingStationArray.add(new ParkingPayStation(49.2020677907932, -122.91080462317406));
+//        parkingStationArray.add(new ParkingPayStation(49.20209454389161, -122.91052455880765));
+//        parkingStationArray.add(new ParkingPayStation(49.202093987366794, -122.91017724142871));
+//        parkingStationArray.add(new ParkingPayStation(49.20244583919352, -122.90945911827548));
+//        parkingStationArray.add(new ParkingPayStation(49.20379282809906, -122.90869160389644));
+//        parkingStationArray.add(new ParkingPayStation(49.20389877855257, -122.90855657863104));
+//        parkingStationArray.add(new ParkingPayStation(49.20384862620838, -122.90688017817034));
+//        parkingStationArray.add(new ParkingPayStation(49.204025985450784, -122.90653695151327));
+//        parkingStationArray.add(new ParkingPayStation(49.20522506548815, -122.90435531394584));
+//        parkingStationArray.add(new ParkingPayStation(49.20551700850255, -122.90381556350756));
+//        parkingStationArray.add(new ParkingPayStation(49.20531339367869, -122.90368603919241));
+//        parkingStationArray.add(new ParkingPayStation(49.20493109896177, -122.90438982152513));
+//    }
 
-    public void addParkingMeterMarkers(LatLng endLatLong) {
+    public void addParkingLotMarkers(LatLng endLatLong) {
         Location parkingLocation = new Location("P1");
         Location endLocation = new Location("P2");
         endLocation.setLatitude(endLatLong.latitude);
         endLocation.setLongitude(endLatLong.longitude);
-        for (int i = 0; i < parkingStationArray.size(); i++) {
+        for (int i = 0; i < parkingPayStationList.size(); i++) {
          	// Location.distanceBetween(parkingStationArray.get(i).getLat(), parkingStationArray.get(i).getLon(), endLatLong.latitude, endLatLong.longitude, results);
-            parkingLocation.setLatitude(parkingStationArray.get(i).getLat());
-            parkingLocation.setLongitude(parkingStationArray.get(i).getLon());
+            ParkingLot parkinglot = parkingPayStationList.get(i);
+            parkingLocation.setLatitude(parkinglot.getLat());
+            parkingLocation.setLongitude(parkinglot.getLon());
             float distance = parkingLocation.distanceTo(endLocation);
             Log.d("", "Location Distance is: " + distance);
             // location distance is set to be 150m radius
             if (distance <= 150) {
-                gMap.addMarker(new MarkerOptions().position(new LatLng(parkingStationArray.get(i).getLat(), parkingStationArray.get(i).getLon())).title("Parking").icon(
-                        BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                gMap.addMarker(new MarkerOptions().position(new LatLng(parkingPayStationList.get(i).getLat(), parkingPayStationList.get(i).getLon()))
+                	.title("Pay station\nparking. ID:" + parkinglot.getName())
+                	.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                );
+            }
+        }
+        for (int i = 0; i < parkingMetersList.size(); i++) {
+            ParkingLot parkinglot = parkingMetersList.get(i);
+            parkingLocation.setLatitude(parkinglot.getLat());
+            parkingLocation.setLongitude(parkinglot.getLon());
+            float distance = parkingLocation.distanceTo(endLocation);
+            if (distance <= 150) {
+                gMap.addMarker(new MarkerOptions().position(new LatLng(parkinglot.getLat(), parkinglot.getLon()))
+                	.title("Parking meter\nID:" + parkinglot.getName())
+                	.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                 );
             }
         }
     }
 
-    public void onSearchForRoute(Boolean byMarker) {
+    public void onSearchForRoute() {
         String srcLocation = start_et_address.getText().toString().trim();
         String destnLocation = end_et_address.getText().toString().trim();
         hideMyKeyboard();
 
-        if (byMarker == true){
-            start_et_address.setText("");
-            end_et_address.setText("");
-        }
 		if (!srcLocation.equals("") && !destnLocation.equals(""))
 		{
             String api_key = getResources().getString(R.string.api_key); //overloaded google_maps_key
@@ -281,6 +301,17 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 			//starting address empty, search for destination instead of a route
 			onSearchForDestination();
 		} 
+    }
+
+    private void demo_markAllParkingMeters() {
+        for (int i = 0; i < parkingPayStationList.size(); i++) {
+         	Location parkingLocation = new Location("test"); 
+            parkingLocation.setLatitude(parkingPayStationList.get(i).getLat());
+            parkingLocation.setLongitude(parkingPayStationList.get(i).getLon());
+            gMap.addMarker(new MarkerOptions().position(new LatLng(parkingLocation.getLatitude(), parkingLocation.getLongitude())).title("Parking").icon(
+       			BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
+            );
+        }
     }
 
     private void hideMyKeyboard() {
@@ -317,7 +348,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                     addressList = geocoder.getFromLocation(lat, lon, 1);
                 } else {
                     //new westminster city hall != new west st new york city, from now on will only work in bc
-                    addressList = geocoder.getFromLocationName(location, 5, 49.206627, -126.697330, 59.960584, -120.180889);
+                    addressList = geocoder.getFromLocationName(location, 1, 49.206627, -126.697330, 59.960584, -120.180889);
                 }
             } catch (IOException e) {
                 //e.printStackTrace(); this is useless in android
@@ -327,21 +358,18 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 t.show();
                 return;
             }
-            Address address = null;
-            for (int i = 0; i < addressList.size(); i++) {
-                address = addressList.get(i);
-                String x = address.getLocality(); //burnaby
-                String y = address.getSubAdminArea(); //greater van
-                String z = address.getAdminArea(); //british column
-            }
-
+            Address address = addressList.get(0);
             LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
             gMap.clear();
+            //add destn marker and move there
             gMap.addMarker(new MarkerOptions().position(latLng).title(address.getAddressLine(0)).icon(
                     BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
             );
-
             gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM));
+            //add parking marker
+            //addParkingMeterMarkers(latLng);
+
+            //solve edge case
             if (location.equals("new westminster city hall")) {
                 demo_cityHallParking();
             }
@@ -431,7 +459,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startAddress, DEFAULT_ZOOM));
 
-        addParkingMeterMarkers(endAddress);
+        addParkingLotMarkers(endAddress);
+        //demo_markAllParkingMeters();
     }
 
     private void gotoMyLocation() {
@@ -580,6 +609,33 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             }
             markAllMallsOnMap(mallsList);
             //drawRoute(route);
+        }
+    }
+
+    private class AsyncParkingLotDownloader extends AsyncTask<URL, Void, Void> {
+        private ArrayList<ParkingLot> mapParkingStations;
+        private ArrayList<ParkingLot> mapParkingMeters;
+
+        @Override
+        protected Void doInBackground(URL... params) {
+            String stationsStr = HttpHelper.parseConnectionForString(params[0]);
+            String metersStr = HttpHelper.parseConnectionForString(params[1]);
+            try {
+                JSONArray stationsJsonArray = new JSONArray(stationsStr);
+                JSONArray metersJsonArray = new JSONArray(metersStr);
+                mapParkingStations = HttpHelper.parseJSONArrayForParkingPayStationDetails(stationsJsonArray);
+                mapParkingMeters = HttpHelper.parseJSONArrayForParkingMeterDetails(metersJsonArray);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur parking json", Toast.LENGTH_SHORT).show();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            parkingPayStationList = mapParkingStations;
+            parkingMetersList = mapParkingMeters;
         }
     }
 //
