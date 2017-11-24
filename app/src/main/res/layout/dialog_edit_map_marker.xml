@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layoutDirection="locale"
-    android:orientation="vertical">
-    <TextView
-        android:id="@+id/title"
+<RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp"
+    android:orientation="vertical"
+    android:id="@+id/start_destn_radio_group"
+    >
+    <RadioButton
+        android:id="@+id/set_destn_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:textColor="#ff000000"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/snippet"
+        android:text="Set as destination"
+        />
+    <RadioButton
+        android:id="@+id/set_start_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#ff7f7f7f" />
-</LinearLayout>
+        android:text="Set as starting point"
+        />
+</RadioGroup>

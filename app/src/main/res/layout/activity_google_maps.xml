@@ -6,49 +6,44 @@
     android:id="@+id/background_linear_layout"
     >
     <LinearLayout
-        android:id="@+id/destination_address_header_linear_layout"
-        android:layout_width="wrap_content"
+        android:id="@+id/address_header_linear_layout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
+        android:orientation="vertical"
         >
         <EditText
             android:id="@+id/destination_address_edit_text"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minEms="9"
             android:hint="Destination" />
+        <EditText
+            android:id="@+id/starting_address_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Starting Address" />
 
+            <!--android:textAllCaps="false"-->
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/buttons_header_linear_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/address_header_linear_layout"
+        >
         <Button
             android:id="@+id/search_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minEms="11"
-            android:maxLines="2"
-            android:text="Find destination"
+            android:text="Go to destination"
             />
-            <!--android:textAllCaps="false"-->
-    </LinearLayout>
-    <LinearLayout
-        android:id="@+id/starting_address_header_linear_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@id/destination_address_header_linear_layout"
-        >
-        <EditText
-            android:id="@+id/starting_address_edit_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:minEms="9"
-            android:hint="Starting Address" />
-
         <Button
             android:id="@+id/route_btn"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:maxLines="2"
-            android:text="Find directions"
+            android:text="Get directions"
             />
     </LinearLayout>
         <!--android:layout_gravity="end|bottom"-->
@@ -61,7 +56,7 @@
         android:layout_height="wrap_content"
         map:zOrderOnTop="false"
         tools:context="com.example.comp3717project.comp3717project.GoogleMapsActivity"
-        android:layout_below="@id/starting_address_header_linear_layout"
+        android:layout_below="@id/buttons_header_linear_layout"
         />
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/locate_me_fab"

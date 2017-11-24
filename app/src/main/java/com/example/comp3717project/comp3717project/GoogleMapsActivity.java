@@ -62,11 +62,10 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     private EditText end_et_address;
     private EditText start_et_address;
     private FusedLocationProviderClient mFusedLocationProviderClient;
-    private Location mLastKnownLocation; //will zoom to this on FAB click
     private MarkerOptions mCurrentAddressMarker; //used to isolate current location marker
 
     private final LatLng mDefaultLocation = new LatLng(49.205681, -122.911256); //google places new west name above this coord
-    private static final int DEFAULT_ZOOM = 15;
+    private static final int DEFAULT_ZOOM = 17;
     private static final int ENTRY_ZOOM = 13;
     private final int DEFAULT_PATH_WIDTH = 5;
     private ArrayList<ParkingPayStations> parkingStationArray;
@@ -198,7 +197,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         onSearchForRoute(true);
     }
 
-    /*these are parking pay stations, not parking meters! 
+    /*these are parking pay stations, not parking meters!
 		due to being way too slow if parsed in, using hard-coded coordinates for demo
     */
     public void addParkingMeterLocations() {
@@ -294,8 +293,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     //regex created from https://regexr.com, the easiest regex tool ive ever used
     private boolean isLatLng(String latLng) {
         String pattern = "([+-]?)(\\d+)\\.+(\\d+),([+-]?)(\\d+)\\.+(\\d+)";
-        //explanation: ( ) : a capture set 
-        // ([+-]?) = optional from set + -, 0 or 1 time
+        //explanation: ( ) = a capture set
+        // ([+-]?) = optional either + -, 0 or 1 time
         // (\d+) = multiple decimals
         // \. = a mandantatory . period
         // (\d+) = multiple decimals 
@@ -304,10 +303,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         return latLng.matches(pattern);
     }
     public void onSearchForDestination() {
-        String location = end_et_address.getText().toString();
+        String location = end_et_address.getText().toString().trim();
         List<Address> addressList = null;
         hideMyKeyboard();
-
         if (!location.equals("")) {
             Geocoder geocoder = new Geocoder(this);
             try {
@@ -318,7 +316,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                     double lon = Double.parseDouble(latLngPair[1]);
                     addressList = geocoder.getFromLocation(lat, lon, 1);
                 } else {
-                    addressList = geocoder.getFromLocationName(location, 1);
+                    //new westminster city hall != new west st new york city, from now on will only work in bc
+                    addressList = geocoder.getFromLocationName(location, 5, 49.206627, -126.697330, 59.960584, -120.180889);
                 }
             } catch (IOException e) {
                 //e.printStackTrace(); this is useless in android
@@ -328,7 +327,14 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 t.show();
                 return;
             }
-            Address address = addressList.get(0);
+            Address address = null;
+            for (int i = 0; i < addressList.size(); i++) {
+                address = addressList.get(i);
+                String x = address.getLocality(); //burnaby
+                String y = address.getSubAdminArea(); //greater van
+                String z = address.getAdminArea(); //british column
+            }
+
             LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
             gMap.clear();
             gMap.addMarker(new MarkerOptions().position(latLng).title(address.getAddressLine(0)).icon(
@@ -336,12 +342,33 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             );
 
             gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM));
+            if (location.equals("new westminster city hall")) {
+                demo_cityHallParking();
+            }
         } else {
             Toast t = Toast.makeText(this, "Please enter a destination.", Toast.LENGTH_LONG);
             t.show();
         }
     }
 
+    private void demo_cityHallParking() {
+    	gMap.addMarker(new MarkerOptions()
+            .position(new LatLng(49.206893, -122.911356))
+            .title("Parking Lot")
+            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+        );
+
+		PolygonOptions parkingLotOptions = new PolygonOptions();
+		parkingLotOptions.add(new LatLng(49.206711, -122.912156));
+		parkingLotOptions.add(new LatLng(49.207338, -122.910916));
+		parkingLotOptions.add(new LatLng(49.207090, -122.910624));
+		parkingLotOptions.add(new LatLng(49.206453, -122.911809));
+		parkingLotOptions.add(new LatLng(49.206711, -122.912156 ));
+        parkingLotOptions.strokeWidth(DEFAULT_PATH_WIDTH);
+        parkingLotOptions.strokeColor(Color.rgb(0, 102, 255)); //med blue
+        parkingLotOptions.fillColor(Color.argb(75, 0, 102, 255)); //light blue
+        gMap.addPolygon(parkingLotOptions);
+    }
 
     public boolean checkLocationPermission() {
         String permission1 = "android.permission.ACCESS_FINE_LOCATION";
@@ -417,11 +444,11 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             @Override
             public void onComplete(@NonNull Task<Location> task) {
                 if (task.isSuccessful()) {
-                    // Set the map's camera position to the current location of the device.
-                    mLastKnownLocation = task.getResult();
-                    LatLng myLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
+                    Location lastKnownLocation = task.getResult();
+                    LatLng myLatLng = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
 
                     gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLatLng, DEFAULT_ZOOM));
+                    //note: overwriting this will overwriting it on the map, updating just the 1 marker
                     mCurrentAddressMarker = new MarkerOptions().position(myLatLng).title("You are here");
                     gMap.addMarker(mCurrentAddressMarker);
                 } else {
@@ -445,9 +472,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 			// location distance is disabled for now
 			// if (distance <= 150) {
                 gMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(mallLocation.getLatitude(), mallLocation.getLongitude()))
-                        .title(mall.getName())
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                    .position(new LatLng(mallLocation.getLatitude(), mallLocation.getLongitude()))
+                    .title(mall.getName())
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                 );
                // }
         }
