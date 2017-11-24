@@ -65,15 +65,19 @@ public class HttpHelper {
 
     //parking_meters.json objects
     public static ArrayList parseJSONArrayForParkingMeterDetails(JSONArray jsonArray) throws JSONException {
-        ArrayList<String> detailsAsObj = new ArrayList<>();
-        JSONObject jsonObj = jsonArray.getJSONObject(0);
-        detailsAsObj.add(jsonObj.getString("json_featuretype"));
-        //detailsAsObj.add( jsonObj.getString("Y") );
-        //detailsAsObj.add( jsonObj.getString("X") );
-        //detailsAsObj.add( jsonObj.getString("Sign_Definition") );
-        detailsAsObj.add(String.valueOf(jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getInt(0))); //lat double
-        detailsAsObj.add(String.valueOf(jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getInt(0))); //lon double
-        return detailsAsObj;
+        if (jsonArray != null) {
+            ArrayList<ParkingPayStations> detailsAsObj = new ArrayList<>();
+            for (int i = 0; i < jsonArray.length(); ++i) {
+                JSONObject ParkingStation = jsonArray.getJSONObject(i);
+                String name = ParkingStation.getString("STATIONID");
+                JSONArray coordList = ParkingStation.getJSONObject("json_geometry").getJSONArray("coordinates");
+                double lon = coordList.getDouble(0);
+                double lat = coordList.getDouble(1);
+                detailsAsObj.add(new ParkingPayStations(name, lat, lon));
+            }
+            return detailsAsObj;
+        }
+        return null;
     }
 
     //navigate route response json like this
