@@ -144,6 +144,10 @@ public class HttpHelper {
                     parkJsonObj.getString("Category") //or this
             );
             //set border info (includes address)
+            String shapeType = parkJsonObj.getJSONObject("json_geometry").getString("type");
+            if (!shapeType.equals("Polygon")) //im too tired to do multipolygons
+                continue;
+
             JSONArray coordList = parkJsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getJSONArray(0);
             ArrayList<LatLng> polygonCoords = new ArrayList<>();
             for (int j = 0; j < coordList.length(); j++) {

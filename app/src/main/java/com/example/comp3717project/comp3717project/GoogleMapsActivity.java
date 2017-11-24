@@ -264,18 +264,18 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 );
             }
         }
-        for (int i = 0; i < parkingMetersList.size(); i++) {
-            ParkingLot parkinglot = parkingMetersList.get(i);
-            parkingLocation.setLatitude(parkinglot.getLat());
-            parkingLocation.setLongitude(parkinglot.getLon());
-            float distance = parkingLocation.distanceTo(endLocation);
-            if (distance <= 150) {
-                gMap.addMarker(new MarkerOptions().position(new LatLng(parkinglot.getLat(), parkinglot.getLon()))
-                	.title("Parking meter\nID:" + parkinglot.getName())
-                	.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                );
-            }
-        }
+        // for (int i = 0; i < parkingMetersList.size(); i++) {
+        //     ParkingLot parkinglot = parkingMetersList.get(i);
+        //     parkingLocation.setLatitude(parkinglot.getLat());
+        //     parkingLocation.setLongitude(parkinglot.getLon());
+        //     float distance = parkingLocation.distanceTo(endLocation);
+        //     if (distance <= 150) {
+        //         gMap.addMarker(new MarkerOptions().position(new LatLng(parkinglot.getLat(), parkinglot.getLon()))
+        //         	.title("Parking meter\nID:" + parkinglot.getName())
+        //         	.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+        //         );
+        //     }
+        // }
     }
 
     public void onSearchForRoute() {
@@ -460,7 +460,10 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startAddress, DEFAULT_ZOOM));
 
         addParkingLotMarkers(endAddress);
-        //demo_markAllParkingMeters();
+        if (endAddressStr.equals("new westminster city hall") || endAddressStr.contains("511 Royal Ave, New Westminster")) {
+            demo_markAllParkingMeters();
+            demo_cityHallParking();
+        }
     }
 
     private void gotoMyLocation() {
@@ -619,12 +622,12 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         @Override
         protected Void doInBackground(URL... params) {
             String stationsStr = HttpHelper.parseConnectionForString(params[0]);
-            String metersStr = HttpHelper.parseConnectionForString(params[1]);
+            // String metersStr = HttpHelper.parseConnectionForString(params[1]);
             try {
                 JSONArray stationsJsonArray = new JSONArray(stationsStr);
-                JSONArray metersJsonArray = new JSONArray(metersStr);
+                // JSONArray metersJsonArray = new JSONArray(metersStr);
                 mapParkingStations = HttpHelper.parseJSONArrayForParkingPayStationDetails(stationsJsonArray);
-                mapParkingMeters = HttpHelper.parseJSONArrayForParkingMeterDetails(metersJsonArray);
+                // mapParkingMeters = HttpHelper.parseJSONArrayForParkingMeterDetails(metersJsonArray);
             } catch (JSONException e) {
                 e.printStackTrace();
                 Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur parking json", Toast.LENGTH_SHORT).show();
@@ -635,7 +638,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         @Override
         protected void onPostExecute(Void result) {
             parkingPayStationList = mapParkingStations;
-            parkingMetersList = mapParkingMeters;
+            // parkingMetersList = mapParkingMeters;
         }
     }
 //
@@ -667,9 +670,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             try {
                 JSONArray parkJsonArray = new JSONArray(jsonStr);
                 mapParkList = HttpHelper.parseJSONArrayForParkDetails(parkJsonArray);
+                int i = 0;
             } catch (JSONException e) {
                 e.printStackTrace();
-                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur parks json", Toast.LENGTH_SHORT).show();
             }
             return null;
         }
