@@ -1,6 +1,7 @@
 package com.example.comp3717project.comp3717project;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -13,12 +14,15 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -83,8 +87,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 .tiltGesturesEnabled(false);
         mapFragment.newInstance(options);
 
-        Intent myIntent = getIntent(); // gets the previously created intent
-        String firstKeyName = myIntent.getStringExtra("DEST_ADDRESS_EXTRA"); //Passed intent variable
+        Intent myIntent = getIntent();
+        String firstKeyName = myIntent.getStringExtra("DEST_ADDRESS_EXTRA");
 
         end_et_address = (EditText) findViewById(R.id.destination_address_edit_text);
         end_et_address.setText(firstKeyName);
@@ -108,17 +112,95 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         FAB.setOnClickListener(new locateMeFABListener());
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this); //service used to locate phone location
 
-        addParkingMeterLocations();
-
-//        gMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-//            @Override
-//            public void onMapClick(LatLng latLng) {
-//                latLng.latitude;
-//                latLng.longitude;
-//            }
-//        });
+        addParkingMeterLocations(); //added to global, not to map
     }
 
+ 	@Override
+    public void onMapReady(GoogleMap map) {
+        gMap = map;
+        if (map == null) {
+            SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+            mapFragment.getMapAsync(this); // this could result in an infinite loop if map is always null
+        }
+        if (map != null) {
+            gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, ENTRY_ZOOM));
+        }
+        int intentActionID = getIntent().getIntExtra("SELECTED_ACTION_EXTRA", 0); //0: nothing, 1 address, 2 shop, 3 park
+        switch (intentActionID) {
+            case 1 : //entered address
+                onSearchForDestination();
+                break;
+            case 2 : //get all shopping malls
+                onSearchForShoppingMalls();
+                break;
+            case 3 : //get all parks
+                onSearchForParks();
+                break;
+            case 4 : //exceptional, fab clicked goto own address\\
+                gotoMyLocation();
+                break;
+        }
+       // not too intuitive, what if they want to set marker as start instead of end?
+       // and how to see marker info?
+       // gMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+       //     @Override
+       //     public boolean onMarkerClick(final Marker marker) {
+       //         LatLng pos = marker.getPosition();
+       //         Log.d("", "latlong is : " + pos.latitude + " - " + pos.longitude);
+       //         getRouteToMarker(pos);
+       //         return true;
+       //     }
+       // });
+        gMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener(){
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                showMarkerOptionsDialog(marker);
+            }
+        });
+    }
+
+    private void showMarkerOptionsDialog(final Marker marker) {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        final View dialogView = inflater.inflate(R.layout.dialog_edit_map_marker, null);
+        dialogBuilder.setView(dialogView);
+        dialogBuilder.setTitle("Address options");
+        dialogBuilder.setMessage("Address: " + marker.getTitle());
+
+        dialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                RadioGroup startOrDestn = dialogView.findViewById(R.id.start_destn_radio_group);
+                int checkedID = startOrDestn.getCheckedRadioButtonId(); //returns -1 if unchecked
+                switch (checkedID) {
+                    case -1 : break; //no radio button checked
+                    case R.id.set_destn_btn:
+                        end_et_address.setText(marker.getPosition().latitude + "," + marker.getPosition().longitude);
+                        break;
+                    case R.id.set_start_btn:
+                        start_et_address.setText(marker.getPosition().latitude + "," + marker.getPosition().longitude);
+                        break;
+                }
+            }
+        });
+
+        dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {/*do nothing*/ }
+        });
+        AlertDialog b = dialogBuilder.create();
+        b.show();
+    }
+ 	private void getRouteToMarker(LatLng latlng){
+        if (checkLocationPermission()) {
+            gMap.setMyLocationEnabled(true);
+        }
+        end_et_address.setText(latlng.latitude + "," + latlng.longitude);
+        start_et_address.setText("49.205681,-122.911256"); //not ok
+        onSearchForRoute(true);
+    }
+
+    /*these are parking pay stations, not parking meters! 
+		due to being way too slow if parsed in, using hard-coded coordinates for demo
+    */
     public void addParkingMeterLocations() {
         parkingStationArray = new ArrayList<ParkingPayStations>();
         parkingStationArray.add(new ParkingPayStations(49.20418453090815, -122.91340442716843));
@@ -159,7 +241,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         endLocation.setLatitude(endLatLong.latitude);
         endLocation.setLongitude(endLatLong.longitude);
         for (int i = 0; i < parkingStationArray.size(); i++) {
-//          Location.distanceBetween(parkingStationArray.get(i).getLat(), parkingStationArray.get(i).getLon(), endLatLong.latitude, endLatLong.longitude, results);
+         	// Location.distanceBetween(parkingStationArray.get(i).getLat(), parkingStationArray.get(i).getLon(), endLatLong.latitude, endLatLong.longitude, results);
             parkingLocation.setLatitude(parkingStationArray.get(i).getLat());
             parkingLocation.setLongitude(parkingStationArray.get(i).getLon());
             float distance = parkingLocation.distanceTo(endLocation);
@@ -177,6 +259,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         String srcLocation = start_et_address.getText().toString().trim();
         String destnLocation = end_et_address.getText().toString().trim();
         hideMyKeyboard();
+
         if (byMarker == true){
             start_et_address.setText("");
             end_et_address.setText("");
@@ -184,11 +267,10 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 		if (!srcLocation.equals("") && !destnLocation.equals(""))
 		{
             String api_key = getResources().getString(R.string.api_key); //overloaded google_maps_key
-            //example: https://maps.googleapis.com/maps/api/directions/json?origin=Toronto&destination=Montreal&key=YOUR_API_KEY
 			String url = "https://maps.googleapis.com/maps/api/directions/json?origin=%1$s&destination=%2$s&mode=%3$s&key=%4$s";
             srcLocation = HttpHelper.convertSpacesIntoURLFormat(srcLocation);
             destnLocation = HttpHelper.convertSpacesIntoURLFormat(destnLocation);
-            String modeOfTransport = "driving"; //or walking, bicycling, transit(departure_time = now)
+            String modeOfTransport = "driving"; //or walking, bicycling, transit(departure_time = now), but left out bc should use parking
             url = String.format(url, srcLocation, destnLocation, modeOfTransport, api_key);
             try {
                 new AsyncRouteDownloader().execute(new URL(url));
@@ -209,17 +291,35 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
     }
 
+    //regex created from https://regexr.com, the easiest regex tool ive ever used
+    private boolean isLatLng(String latLng) {
+        String pattern = "([+-]?)(\\d+)\\.+(\\d+),([+-]?)(\\d+)\\.+(\\d+)";
+        //explanation: ( ) : a capture set 
+        // ([+-]?) = optional from set + -, 0 or 1 time
+        // (\d+) = multiple decimals
+        // \. = a mandantatory . period
+        // (\d+) = multiple decimals 
+        // , = a mandatory , comma 
+        // repeat above, ending before the ,
+        return latLng.matches(pattern);
+    }
     public void onSearchForDestination() {
         String location = end_et_address.getText().toString();
         List<Address> addressList = null;
         hideMyKeyboard();
 
-        //location will never be null unless et_address is not found roger!
         if (!location.equals("")) {
             Geocoder geocoder = new Geocoder(this);
             try {
-                //y is it a list, we only ever use 1
-                addressList = geocoder.getFromLocationName(location, 1);
+                //coordinates and place names must be treated differently
+                if (isLatLng(location)) {
+                    String[] latLngPair = location.split(",");
+                    double lat = Double.parseDouble(latLngPair[0]);
+                    double lon = Double.parseDouble(latLngPair[1]);
+                    addressList = geocoder.getFromLocation(lat, lon, 1);
+                } else {
+                    addressList = geocoder.getFromLocationName(location, 1);
+                }
             } catch (IOException e) {
                 //e.printStackTrace(); this is useless in android
             }
@@ -242,60 +342,13 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         }
     }
 
-    @Override
-    public void onMapReady(GoogleMap map) {
-        gMap = map;
-        if (map == null) {
-            SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-            mapFragment.getMapAsync(this); // this could result in an infinite loop if map is always null
-        }
-        if (map != null) {
-            gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, ENTRY_ZOOM));
-        }
-        int intentActionID = getIntent().getIntExtra("SELECTED_ACTION_EXTRA", 0); //0: nothing, 1 address, 2 shop, 3 park
-        switch (intentActionID) {
-            case 1 : //entered address
-                onSearchForDestination();
-                break;
-            case 2 : //get all shopping malls
-                onSearchForShoppingMalls();
-                break;
-            case 3 : //get all parks
-                onSearchForParks();
-                break;
-            case 4 : //exceptional, fab clicked goto own address\\
-                gotoMyLocation();
-                break;
-        }
-        gMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-
-            @Override
-            public boolean onMarkerClick(final Marker marker) {
-                LatLng pos = marker.getPosition();
-                Log.d("", "latlong is : " + pos.latitude + " - " + pos.longitude);
-                getRouteToMarker(pos);
-                return true;
-            }
-        });
-    }
-
-    private void getRouteToMarker(LatLng latlng){
-        if (checkLocationPermission()) {
-            gMap.setMyLocationEnabled(true);
-        }
-
-//        double lat = gMap.getMyLocation().getLatitude();
-//        double lng = gMap.getMyLocation().getLongitude();
-//        Log.d("", "latlong is : " + lat + " - " + lng + " 2. " + latlng.latitude + "-" + latlng.longitude);
-        end_et_address.setText(latlng.latitude + "," + latlng.longitude);
-        start_et_address.setText("49.205681,-122.911256");
-        onSearchForRoute(true);
-    }
 
     public boolean checkLocationPermission() {
-        String permission = "android.permission.ACCESS_FINE_LOCATION";
-        int res = this.checkCallingOrSelfPermission(permission);
-        return (res == PackageManager.PERMISSION_GRANTED);
+        String permission1 = "android.permission.ACCESS_FINE_LOCATION";
+        String permission2 = "android.permission.ACCESS_COARSE_LOCATION";
+        int granted1 = this.checkCallingOrSelfPermission(permission1);
+        int granted2 = this.checkCallingOrSelfPermission(permission2);
+        return (granted1== PackageManager.PERMISSION_GRANTED && granted2 == PackageManager.PERMISSION_GRANTED);
     }
 
     public void onSearchForShoppingMalls() {
@@ -355,11 +408,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     }
 
     private void gotoMyLocation() {
-        if (ActivityCompat.checkSelfPermission(GoogleMapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(GoogleMapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED)
-        {
+    	boolean myLocationPermissionsGranted = checkLocationPermission();
+        if (!myLocationPermissionsGranted) {
             return;
         }
         Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
@@ -385,21 +435,21 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
     private void markAllMallsOnMap(List<Mall> mallsList) {
         Location mallLocation = new Location("P1");
-//        Location referencePoint = new Location("P2");
-//        referencePoint.setLatitude(mDefaultLocation.latitude);
-//        referencePoint.setLongitude(mDefaultLocation.longitude);
+       // Location referencePoint = new Location("P2");
+       // referencePoint.setLatitude(mDefaultLocation.latitude);
+       // referencePoint.setLongitude(mDefaultLocation.longitude);
         for (Mall mall : mallsList) {
             mallLocation.setLatitude(Double.parseDouble(mall.getLatitude()));
             mallLocation.setLongitude(Double.parseDouble(mall.getLongitude()));
-//            float distance = mallLocation.distanceTo(referencePoint);
-            // location distance is disabled for now
-//                if (distance <= 150) {
+			// float distance = mallLocation.distanceTo(referencePoint);
+			// location distance is disabled for now
+			// if (distance <= 150) {
                 gMap.addMarker(new MarkerOptions()
                         .position(new LatLng(mallLocation.getLatitude(), mallLocation.getLongitude()))
                         .title(mall.getName())
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                 );
-//                }
+               // }
         }
     }
 
@@ -427,30 +477,30 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         }
     }
 
-    //inefficient
-//    private void markAllParksOnMap(ArrayList<Park> mapParkList) {
-//        for (Park park : mapParkList) {
-//            String location = park.getStrNum() + " " + park.getStrName() + ", New Westminster, CA";
-//            List<Address> addressList = null;
-//
-//            if(!location.equals(""))
-//            {
-//                Geocoder geocoder = new Geocoder(this);
-//                try {
-//                    addressList = geocoder.getFromLocationName(location, 1);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//
-//                Address address = addressList.get(0);
-//                LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-//                gMap.addMarker(new MarkerOptions()
-//                        .position(latLng)
-//                        .title(park.getParkName())
-//                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-//            }
-//        }
-//    }
+   // inefficient
+   // private void markAllParksOnMap(ArrayList<Park> mapParkList) {
+   //     for (Park park : mapParkList) {
+   //         String location = park.getStrNum() + " " + park.getStrName() + ", New Westminster, CA";
+   //         List<Address> addressList = null;
+
+   //         if(!location.equals(""))
+   //         {
+   //             Geocoder geocoder = new Geocoder(this);
+   //             try {
+   //                 addressList = geocoder.getFromLocationName(location, 1);
+   //             } catch (IOException e) {
+   //                 e.printStackTrace();
+   //             }
+
+   //             Address address = addressList.get(0);
+   //             LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+   //             gMap.addMarker(new MarkerOptions()
+   //                     .position(latLng)
+   //                     .title(park.getParkName())
+   //                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+   //         }
+   //     }
+   // }
 
     private class locateMeFABListener implements View.OnClickListener {
         @Override
