@@ -151,17 +151,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 gotoMyLocation();
                 break;
         }
-       // not too intuitive, what if they want to set marker as start instead of end?
-       // and how to see marker info?
-       // gMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-       //     @Override
-       //     public boolean onMarkerClick(final Marker marker) {
-       //         LatLng pos = marker.getPosition();
-       //         Log.d("", "latlong is : " + pos.latitude + " - " + pos.longitude);
-       //         getRouteToMarker(pos);
-       //         return true;
-       //     }
-       // });
         gMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener(){
             @Override
             public void onInfoWindowClick(Marker marker) {
@@ -205,51 +194,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         AlertDialog b = dialogBuilder.create();
         b.show();
     }
-// 	private void getRouteToMarker(LatLng latlng){
-//        if (checkLocationPermission()) {
-//            gMap.setMyLocationEnabled(true);
-//        }
-//        end_et_address.setText(latlng.latitude + "," + latlng.longitude);
-//        start_et_address.setText("49.205681,-122.911256"); //not ok
-//        onSearchForRoute(true);
-//    }
-
-    /*these are parking pay stations, not parking meters!
-		due to being way too slow if parsed in, using hard-coded coordinates for demo
-    */
-//    public void addParkingMeterLocations() {
-//        parkingStationArray = new ArrayList<ParkingPayStation>();
-//        parkingStationArray.add(new ParkingPayStation(49.20418453090815, -122.91340442716843));
-//        parkingStationArray.add(new ParkingPayStation(49.204503225410704, -122.91281265611559));
-//        parkingStationArray.add(new ParkingPayStation(49.20509807271738, -122.91171721680868));
-//        parkingStationArray.add(new ParkingPayStation(49.20423556721974, -122.9117484874497));
-//        parkingStationArray.add(new ParkingPayStation(49.20416647862545, -122.91131134034579));
-//        parkingStationArray.add(new ParkingPayStation(49.20422632852543, -122.91090184461366));
-//        parkingStationArray.add(new ParkingPayStation(49.2046369441439, -122.91045640704931));
-//        parkingStationArray.add(new ParkingPayStation(49.2029516117076, -122.913878308475));
-//        parkingStationArray.add(new ParkingPayStation(49.20233941773015, -122.91350467001372));
-//        parkingStationArray.add(new ParkingPayStation(49.201883691629554, -122.91310258521297));
-//        parkingStationArray.add(new ParkingPayStation(49.20116934356277, -122.91603671851404));
-//        parkingStationArray.add(new ParkingPayStation(49.20081791760789, -122.91513065856175));
-//        parkingStationArray.add(new ParkingPayStation(49.20286871325938, -122.91135581781107));
-//        parkingStationArray.add(new ParkingPayStation(49.20341286844059, -122.91033816837748));
-//        parkingStationArray.add(new ParkingPayStation(49.20391186560162, -122.90940215684569));
-//        parkingStationArray.add(new ParkingPayStation(49.20189305910532, -122.91213580849457));
-//        parkingStationArray.add(new ParkingPayStation(49.202418418071574, -122.91129563206509));
-//        parkingStationArray.add(new ParkingPayStation(49.20248553924138, -122.91108742930871));
-//        parkingStationArray.add(new ParkingPayStation(49.2020677907932, -122.91080462317406));
-//        parkingStationArray.add(new ParkingPayStation(49.20209454389161, -122.91052455880765));
-//        parkingStationArray.add(new ParkingPayStation(49.202093987366794, -122.91017724142871));
-//        parkingStationArray.add(new ParkingPayStation(49.20244583919352, -122.90945911827548));
-//        parkingStationArray.add(new ParkingPayStation(49.20379282809906, -122.90869160389644));
-//        parkingStationArray.add(new ParkingPayStation(49.20389877855257, -122.90855657863104));
-//        parkingStationArray.add(new ParkingPayStation(49.20384862620838, -122.90688017817034));
-//        parkingStationArray.add(new ParkingPayStation(49.204025985450784, -122.90653695151327));
-//        parkingStationArray.add(new ParkingPayStation(49.20522506548815, -122.90435531394584));
-//        parkingStationArray.add(new ParkingPayStation(49.20551700850255, -122.90381556350756));
-//        parkingStationArray.add(new ParkingPayStation(49.20531339367869, -122.90368603919241));
-//        parkingStationArray.add(new ParkingPayStation(49.20493109896177, -122.90438982152513));
-//    }
 
     public void addParkingLotMarkers(LatLng endLatLong) {
         Location parkingLocation = new Location("P1");
@@ -291,10 +235,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 Geocoder geocoder = new Geocoder(this);
                 List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
                 String address = addresses.get(0).getAddressLine(0);
-                String city = addresses.get(0).getAddressLine(1);
-                String country = addresses.get(0).getAddressLine(2);
-                Log.d("Roger test", "address = " + address + ", city = " + city + ", country = " + country);
-                return address + "," + city + "," + country;
+                //note, the first line includes the PO box, street address, city, country
+                //2nd & 3rd address lines are all null
+                return address;
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -308,8 +251,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         String srcLocation = start_et_address.getText().toString().trim();
         String destnLocation = end_et_address.getText().toString().trim();
         hideMyKeyboard();
-
-
 
 		if (!srcLocation.equals("") && !destnLocation.equals(""))
 		{
@@ -337,7 +278,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             parkingLocation.setLatitude(parkingPayStationList.get(i).getLat());
             parkingLocation.setLongitude(parkingPayStationList.get(i).getLon());
             gMap.addMarker(new MarkerOptions().position(new LatLng(parkingLocation.getLatitude(), parkingLocation.getLongitude())).title("Parking").icon(
-       			BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
+       			BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
             );
         }
     }
@@ -349,57 +290,35 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
     }
 
-    //regex created from https://regexr.com, the easiest regex tool ive ever used
-    private boolean isLatLng(String latLng) {
-        String pattern = "([+-]?)(\\d+)\\.+(\\d+),([+-]?)(\\d+)\\.+(\\d+)";
-        //explanation: ( ) = a capture set
-        // ([+-]?) = optional either + -, 0 or 1 time
-        // (\d+) = multiple decimals
-        // \. = a mandantatory . period
-        // (\d+) = multiple decimals 
-        // , = a mandatory , comma 
-        // repeat above, ending before the ,
-        return latLng.matches(pattern);
-    }
-    public void onSearchForDestination() {
-        String location = end_et_address.getText().toString().trim();
-        List<Address> addressList = null;
-        hideMyKeyboard();
-        if (!location.equals("")) {
-            Geocoder geocoder = new Geocoder(this);
-            try {
-                //coordinates and place names must be treated differently
-                if (isLatLng(location)) {
-                    String[] latLngPair = location.split(",");
-                    double lat = Double.parseDouble(latLngPair[0]);
-                    double lon = Double.parseDouble(latLngPair[1]);
-                    addressList = geocoder.getFromLocation(lat, lon, 1);
-                } else {
-                    //new westminster city hall != new west st new york city, from now on will only work in bc
-                    addressList = geocoder.getFromLocationName(location, 1, 49.206627, -126.697330, 59.960584, -120.180889);
-                }
-            } catch (IOException e) {
-                //e.printStackTrace(); this is useless in android
-            }
-            if (addressList.size() == 0) {
-                Toast t = Toast.makeText(this, "No address found.\nPlease make sure address exists.", Toast.LENGTH_LONG);
-                t.show();
-                return;
-            }
-            Address address = addressList.get(0);
-            LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-            gMap.clear();
-            //add destn marker and move there
-            gMap.addMarker(new MarkerOptions().position(latLng).title(address.getAddressLine(0)).icon(
-                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
-            );
-            gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM));
-            //add parking marker
-            //addParkingMeterMarkers(latLng);
+    //Android geocoder wasn't doing its job, drawRoute does this and more
+    // private void gotoDestination(LatLng latLng) {
+    //     gMap.clear();
+    //     //add destn marker and move there 
+    //     gMap.addMarker(new MarkerOptions().position(latLng).title(address.getAddressLine(0)).icon(
+    //             BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+    //     );
+    //     gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM));
+    //     //add parking marker
+    //     //addParkingMeterMarkers(latLng);
+    //     //solve edge case
+    //     if (location.equals("new westminster city hall")) {
+    //         demo_cityHallParking();
+    //     }
+    // }
 
-            //solve edge case
-            if (location.equals("new westminster city hall")) {
-                demo_cityHallParking();
+    public void onSearchForDestination() {
+        String destnLocation = end_et_address.getText().toString().trim();
+        hideMyKeyboard();
+        if (!destnLocation.equals("")) {
+            String api_key = getResources().getString(R.string.api_key); //overloaded google_maps_key
+			String url = "https://maps.googleapis.com/maps/api/directions/json?origin=%1$s&destination=%2$s&key=%3$s";
+            destnLocation = HttpHelper.convertSpacesIntoURLFormat(destnLocation);
+            url = String.format(url, destnLocation, destnLocation, api_key);
+            try {
+                new AsyncRouteDownloader().execute(new URL(url));
+            } catch(IOException ioe) {
+                String msg = url + "\nWarning, URL badly formatted. Search for destination aborted.";
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
             }
         } else {
             Toast t = Toast.makeText(this, "Please enter a destination.", Toast.LENGTH_LONG);
@@ -440,7 +359,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         try {
             new AsyncShoppingMallDownloader().execute(new URL(url));
         } catch(IOException ioe) {
-            String msg = url + "\nWarning, city URL badly formatted. Search aborted.";
+            String msg = url + "\nWarning, city URL badly formatted. Search for route aborted.";
             Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
         }
     }
@@ -460,30 +379,41 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     //Note: DONT change the order of vars in here unless u know wat ur doing
     private void drawRoute(Route route) {
         gMap.clear();
-        //add route as polyline
         String polylineStr = route.getPolyline(); //getIntent().getStringExtra("POLYLINE_EXTRA");
         List<LatLng> polylineCoordList = PolyUtil.decode(polylineStr);
-        PolylineOptions routeOptions = new PolylineOptions();
-        for (LatLng point : polylineCoordList) {
-            routeOptions.add(point);
-        }
-        routeOptions.width(DEFAULT_PATH_WIDTH);
-        routeOptions.color(Color.BLUE);
-        gMap.addPolyline(routeOptions);
+		LatLng startAddress = null;
+		boolean routeForSingleAddress = false;
 
-        //add start marker
-        String startAddressStr = route.getSrc(); //getIntent().getStringExtra("START_EXTRA");
-        LatLng startAddress =  polylineCoordList.get(0);
-        gMap.addMarker(new MarkerOptions().position(startAddress).title(startAddressStr).icon(
-                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE))
-        );
+		String startAddressStr = route.getSrc();
+		String endAddressStr = route.getDestn(); 
+        //don't draw route polyline & start marker if same start & end
+        if (!startAddressStr.equals(endAddressStr)) {
+	        //add route as polyline
+	        PolylineOptions routeOptions = new PolylineOptions();
+	        for (LatLng point : polylineCoordList) {
+	            routeOptions.add(point);
+	        }
+	        routeOptions.width(DEFAULT_PATH_WIDTH);
+	        routeOptions.color(Color.BLUE);
+	        gMap.addPolyline(routeOptions);
+
+	        //add start marker
+	        startAddress =  polylineCoordList.get(0);
+	        gMap.addMarker(new MarkerOptions().position(startAddress).title(startAddressStr).icon(
+	                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE))
+	        );
+	    } else {
+	    	routeForSingleAddress = true;
+	    }
 
         //add end marker
-        String endAddressStr = route.getDestn(); //getIntent().getStringExtra("END_EXTRA");
         LatLng endAddress = polylineCoordList.get(polylineCoordList.size()-1);
         gMap.addMarker(new MarkerOptions().position(endAddress).title(endAddressStr).icon(
                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
         );
+        if (routeForSingleAddress) {
+        	startAddress = endAddress;
+        }
 
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startAddress, DEFAULT_ZOOM));
 
@@ -564,31 +494,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         }
     }
 
-   // inefficient
-   // private void markAllParksOnMap(ArrayList<Park> mapParkList) {
-   //     for (Park park : mapParkList) {
-   //         String location = park.getStrNum() + " " + park.getStrName() + ", New Westminster, CA";
-   //         List<Address> addressList = null;
-
-   //         if(!location.equals(""))
-   //         {
-   //             Geocoder geocoder = new Geocoder(this);
-   //             try {
-   //                 addressList = geocoder.getFromLocationName(location, 1);
-   //             } catch (IOException e) {
-   //                 e.printStackTrace();
-   //             }
-
-   //             Address address = addressList.get(0);
-   //             LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-   //             gMap.addMarker(new MarkerOptions()
-   //                     .position(latLng)
-   //                     .title(park.getParkName())
-   //                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-   //         }
-   //     }
-   // }
-
     private class locateMeFABListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
@@ -600,6 +505,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         }
     }
 
+    //cheated a bit by calling this to also look for a lone destination address
+    //bc its more accurate than Android geocoder and I didnt want to
+    //use google's geolocation api, since i already wrote this
     private class AsyncRouteDownloader extends AsyncTask<URL, Void, String> {
         @Override
         protected String doInBackground(URL... params) {
