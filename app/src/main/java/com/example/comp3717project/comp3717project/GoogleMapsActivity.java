@@ -536,10 +536,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             super.onPreExecute();
             // Showing progress dialog
             pDialog = new ProgressDialog(GoogleMapsActivity.this);
-            pDialog.setMessage("Please wait...");
+            pDialog.setMessage("Please wait just a moment...");
             pDialog.setCancelable(false);
             pDialog.show();
-
         }
 
         @Override
@@ -620,7 +619,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             super.onPreExecute();
             // Showing progress dialog
             pDialog = new ProgressDialog(GoogleMapsActivity.this);
-            pDialog.setMessage("Please wait...");
+            pDialog.setMessage("Please wait just a moment...");
             pDialog.setCancelable(false);
             pDialog.show();
 
