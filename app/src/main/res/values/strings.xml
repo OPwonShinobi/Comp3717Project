@@ -11,4 +11,10 @@
     </string-array>
     <string name="title_activity_google_maps">Map</string>
     <string name="title_activity_maps">Map</string>
+
+    <!-- dialog_edit_map_marker.xml -->
+    <string name="set_start">Set as starting point</string>
+    <string name="set_dest">Set as destination</string>
+    <string name="add_fav">Add to Favorite</string>
+    <string name="fav_name">Name of Place</string>
 </resources>

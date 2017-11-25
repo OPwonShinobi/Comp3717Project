@@ -2,6 +2,7 @@ package com.example.comp3717project.comp3717project;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
@@ -9,6 +10,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
@@ -18,6 +20,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Toast;
@@ -53,6 +57,8 @@ import java.util.List;
  * This shows how to create a simple activity with a map and a marker on the map.
  */
 public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+
+    protected static SharedPreferences prefs;
 
     private MapView mapView;
     private GoogleMap gMap;
@@ -176,6 +182,25 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         dialogBuilder.setTitle("Address options");
         dialogBuilder.setMessage("Address: " + marker.getTitle());
 
+        final CheckBox favCheckBox = dialogView.findViewById(R.id.favCheckBox);
+        final EditText favNameEdit = dialogView.findViewById(R.id.favNameText);
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean status = prefs.getBoolean("FavoriteCheck", false);
+        favCheckBox.setChecked(status);
+
+        favCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    favNameEdit.setVisibility(View.VISIBLE);
+                    favNameEdit.setText(marker.getTitle());
+                } else {
+                    favNameEdit.setVisibility(View.INVISIBLE);
+                    favNameEdit.setText("");
+                }
+            }
+        });
+
         dialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 RadioGroup startOrDestn = dialogView.findViewById(R.id.start_destn_radio_group);
@@ -189,6 +214,26 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                         start_et_address.setText(marker.getPosition().latitude + "," + marker.getPosition().longitude);
                         break;
                 }
+
+                String favName = favNameEdit.getText().toString();
+                FavoritePlace favPlace = new FavoritePlace(favName,
+                        marker.getPosition().latitude,
+                        marker.getPosition().longitude);
+
+                if (favCheckBox.isChecked()) {
+                    if (favName.equals("")) {
+                        Toast.makeText(GoogleMapsActivity.this,
+                                "Name of place cannot be empty", Toast.LENGTH_LONG).show();
+                    } else {
+                        MainActivity.favoriteList.add(favPlace);
+                    }
+                } else {
+                    MainActivity.favoriteList.remove(favPlace);
+                }
+
+                SharedPreferences.Editor editPrefs = prefs.edit();
+                editPrefs.putBoolean("FavoriteCheck", favCheckBox.isChecked());
+                editPrefs.commit();
             }
         });
 
