@@ -1,5 +1,6 @@
 package com.example.comp3717project.comp3717project;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -67,6 +68,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     private final int DEFAULT_PATH_WIDTH = 5;
     private ArrayList<ParkingLot> parkingPayStationList;
     private ArrayList<ParkingLot> parkingMetersList;
+    private ProgressDialog pDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -180,13 +182,18 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             public void onClick(DialogInterface dialog, int whichButton) {
                 RadioGroup startOrDestn = dialogView.findViewById(R.id.start_destn_radio_group);
                 int checkedID = startOrDestn.getCheckedRadioButtonId(); //returns -1 if unchecked
+                String addressString = "";
                 switch (checkedID) {
                     case -1 : break; //no radio button checked
                     case R.id.set_destn_btn:
                         end_et_address.setText(marker.getPosition().latitude + "," + marker.getPosition().longitude);
+                        addressString = getAddress(marker.getPosition().latitude, marker.getPosition().longitude);
+                        end_et_address.setText(addressString);
                         break;
                     case R.id.set_start_btn:
                         start_et_address.setText(marker.getPosition().latitude + "," + marker.getPosition().longitude);
+                        addressString = getAddress(marker.getPosition().latitude, marker.getPosition().longitude);
+                        start_et_address.setText(addressString);
                         break;
                 }
             }
@@ -278,10 +285,31 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         // }
     }
 
+    public String getAddress(double latitude, double longitude) {
+        if (latitude != 0 && longitude != 0) {
+            try {
+                Geocoder geocoder = new Geocoder(this);
+                List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+                String address = addresses.get(0).getAddressLine(0);
+                String city = addresses.get(0).getAddressLine(1);
+                String country = addresses.get(0).getAddressLine(2);
+                Log.d("Roger test", "address = " + address + ", city = " + city + ", country = " + country);
+                return address + "," + city + "," + country;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(this, "latitude and longitude are null", Toast.LENGTH_LONG).show();
+        }
+        return "";
+    }
+
     public void onSearchForRoute() {
         String srcLocation = start_et_address.getText().toString().trim();
         String destnLocation = end_et_address.getText().toString().trim();
         hideMyKeyboard();
+
+
 
 		if (!srcLocation.equals("") && !destnLocation.equals(""))
 		{
@@ -594,6 +622,18 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
     }
 
     private class AsyncShoppingMallDownloader extends AsyncTask<URL, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(GoogleMapsActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+
+        }
+
         @Override
         protected String doInBackground(URL... params) {
             return HttpHelper.parseConnectionForString(params[0]);
@@ -610,6 +650,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             if (mallsList == null) {
                 return;
             }
+
+            if (pDialog.isShowing())
+                pDialog.dismiss();
             markAllMallsOnMap(mallsList);
             //drawRoute(route);
         }
@@ -665,6 +708,17 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         private ArrayList<Park> mapParkList;
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(GoogleMapsActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+
+        }
+
+        @Override
         protected Void doInBackground(URL... params) {
             String jsonStr = HttpHelper.parseConnectionForString(params[0]);
             try {
@@ -679,6 +733,9 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
         @Override
         protected void onPostExecute(Void result) {
+            // Dismiss the progress dialog
+            if (pDialog.isShowing())
+                pDialog.dismiss();
             markAllParksOnMap(mapParkList);
         }
     }
