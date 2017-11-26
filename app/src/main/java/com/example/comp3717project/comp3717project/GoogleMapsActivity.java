@@ -235,9 +235,11 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 Geocoder geocoder = new Geocoder(this);
                 List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
                 String address = addresses.get(0).getAddressLine(0);
+                String city = addresses.get(0).getAddressLine(1);
+                String country = addresses.get(0).getAddressLine(2);
                 //note, the first line includes the PO box, street address, city, country
                 //2nd & 3rd address lines are all null
-                return address;
+                return address + "," + city + "," + country;
             } catch (Exception e) {
                 e.printStackTrace();
             }
