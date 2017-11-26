@@ -64,7 +64,7 @@ public class HttpHelper {
     }
 
     //parking_station.json objects
-    public static ArrayList parseJSONArrayForParkingPayStationDetails(JSONArray jsonArray) throws JSONException {
+    public static ArrayList parseJSONArrayForParkingPayStations(JSONArray jsonArray) throws JSONException {
         if (jsonArray != null) {
             ArrayList<ParkingLot> detailsAsObj = new ArrayList<>();
             for (int i = 0; i < jsonArray.length(); ++i) {
@@ -81,7 +81,7 @@ public class HttpHelper {
     }
 
     //parking_meters.json objects
-    public static ArrayList parseJSONArrayForParkingMeterDetails(JSONArray jsonArray) throws JSONException {
+    public static ArrayList parseJSONArrayForParkingMeters(JSONArray jsonArray) throws JSONException {
         if (jsonArray != null) {
             ArrayList<ParkingLot> detailsAsObj = new ArrayList<>();
             for (int i = 0; i < jsonArray.length(); ++i) {
@@ -90,6 +90,25 @@ public class HttpHelper {
                 JSONArray coordList = jsonObj.getJSONObject("json_geometry").getJSONArray("coordinates");
                 double lon = coordList.getDouble(0);
                 double lat = coordList.getDouble(1);
+                detailsAsObj.add(new ParkingLot(name, lat, lon));
+            }
+            return detailsAsObj;
+        }
+        return null;
+    }
+
+    //parse a custom result json returned by google
+    public static ArrayList parseJSONObjectForGoogleParkingLots(JSONObject jsonObj) throws JSONException {
+        String authStatus = jsonObj.getString("status");
+        if (authStatus.equals("OK")) {
+            ArrayList<ParkingLot> detailsAsObj = new ArrayList<>();
+            JSONArray resultsArray = jsonObj.getJSONArray("results");
+            for (int i = 0; i < resultsArray.length(); ++i) {
+                JSONObject parkingLotJson = resultsArray.getJSONObject(i);
+                JSONObject latLngPair = parkingLotJson.getJSONObject("geometry").getJSONObject("location");
+                double lat = latLngPair.getDouble("lat");
+                double lon = latLngPair.getDouble("lng");
+                String name = parkingLotJson.getString("name");
                 detailsAsObj.add(new ParkingLot(name, lat, lon));
             }
             return detailsAsObj;

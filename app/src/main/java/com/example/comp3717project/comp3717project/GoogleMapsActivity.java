@@ -195,7 +195,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         b.show();
     }
 
-    public void addParkingLotMarkers(LatLng endLatLong) {
+    private void addParkingLotMarkers(LatLng endLatLong) {
         Location parkingLocation = new Location("P1");
         Location endLocation = new Location("P2");
         endLocation.setLatitude(endLatLong.latitude);
@@ -208,28 +208,42 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             float distance = parkingLocation.distanceTo(endLocation);
             Log.d("", "Location Distance is: " + distance);
             // location distance is set to be 150m radius
-            if (distance <= 150) {
+            if (distance <= 200) {
                 gMap.addMarker(new MarkerOptions().position(new LatLng(parkingPayStationList.get(i).getLat(), parkingPayStationList.get(i).getLon()))
                 	.title("Pay station\nparking. ID:" + parkinglot.getName())
                 	.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                 );
             }
         }
-        // for (int i = 0; i < parkingMetersList.size(); i++) {
-        //     ParkingLot parkinglot = parkingMetersList.get(i);
-        //     parkingLocation.setLatitude(parkinglot.getLat());
-        //     parkingLocation.setLongitude(parkinglot.getLon());
-        //     float distance = parkingLocation.distanceTo(endLocation);
-        //     if (distance <= 150) {
-        //         gMap.addMarker(new MarkerOptions().position(new LatLng(parkinglot.getLat(), parkinglot.getLon()))
-        //         	.title("Parking meter\nID:" + parkinglot.getName())
-        //         	.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-        //         );
-        //     }
-        // }
+        onSearchForGoogleParkingLots(endLatLong);
     }
 
-    public String getAddress(double latitude, double longitude) {
+    private void onSearchForGoogleParkingLots(LatLng latLng) {
+        // eg https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=-33.8670522,151.1957362&radius=500&type=restaurant&keyword=cruise&key
+        String queryUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=%1$s&radius=%2$s&type=parking&key=%3$s";
+        String latLngStr = latLng.latitude + "," + latLng.longitude ;
+        String radiusStr = "500"; //this is in metres
+        String apiKey = getResources().getString(R.string.api_key);
+        queryUrl = String.format(queryUrl, latLngStr, radiusStr, apiKey);
+        try {
+            new AsyncGoogleParkingLotDownloader().execute(new URL(queryUrl));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            String msg = queryUrl + "\nWarning, parking lot query URL badly formatted. Search aborted.";
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+        }
+    }
+
+	private void addGoogleParkingLotMarkers(ArrayList<ParkingLot> resultsList) {
+		for (ParkingLot parkingLot : resultsList) {
+			gMap.addMarker(new MarkerOptions().position(new LatLng(parkingLot.getLat(), parkingLot.getLon()))
+				.title(parkingLot.getName())
+				.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+			);
+		}
+ 	}
+ 	
+    private String getAddress(double latitude, double longitude) {
         if (latitude != 0 && longitude != 0) {
             try {
                 Geocoder geocoder = new Geocoder(this);
@@ -418,10 +432,10 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startAddress, DEFAULT_ZOOM));
 
         addParkingLotMarkers(endAddress);
-        if (endAddressStr.equals("new westminster city hall") || endAddressStr.contains("511 Royal Ave, New Westminster")) {
-            demo_markAllParkingMeters();
-            demo_cityHallParking();
-        }
+        // if (endAddressStr.equals("new westminster city hall") || endAddressStr.contains("511 Royal Ave, New Westminster")) {
+        //     demo_markAllParkingMeters();
+        //     demo_cityHallParking();
+        // }
     }
 
     private void gotoMyLocation() {
@@ -567,7 +581,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
     private class AsyncParkingLotDownloader extends AsyncTask<URL, Void, Void> {
         private ArrayList<ParkingLot> mapParkingStations;
-        private ArrayList<ParkingLot> mapParkingMeters;
+        // private ArrayList<ParkingLot> mapParkingMeters;
 
         @Override
         protected Void doInBackground(URL... params) {
@@ -576,7 +590,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             try {
                 JSONArray stationsJsonArray = new JSONArray(stationsStr);
                 // JSONArray metersJsonArray = new JSONArray(metersStr);
-                mapParkingStations = HttpHelper.parseJSONArrayForParkingPayStationDetails(stationsJsonArray);
+                mapParkingStations = HttpHelper.parseJSONArrayForParkingPayStations(stationsJsonArray);
                 // mapParkingMeters = HttpHelper.parseJSONArrayForParkingMeterDetails(metersJsonArray);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -591,26 +605,28 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             // parkingMetersList = mapParkingMeters;
         }
     }
-//
-//    private class AsyncParkingMeter extends AsyncTask<URL, Void, String> {
-//        @Override
-//        protected String doInBackground(URL... params) {
-//            return HttpHelper.parseConnectionForString(params[0]);
-//        }
-//
-//        @Override
-//        protected void onPostExecute(String result) {
-//            Route route = null;
-//            try {
-//                route = HttpHelper.parseJSONArrayForParkingMeterDetails(new JSONObject(result));
-//            } catch (Exception e) {
-//                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur parking meter json", Toast.LENGTH_SHORT).show();
-//            }
-//            if (route == null) {
-//                return;
-//            }
-//        }
-//    }
+
+	private class AsyncGoogleParkingLotDownloader extends AsyncTask<URL, Void, String> {
+	   @Override
+	   protected String doInBackground(URL... params) {
+	       return HttpHelper.parseConnectionForString(params[0]);
+	   }
+
+	   @Override
+	   protected void onPostExecute(String result) {
+	       ArrayList<ParkingLot> resultsList = null;
+	       try {
+	           resultsList = HttpHelper.parseJSONObjectForGoogleParkingLots(new JSONObject(result));
+	       } catch (Exception e) {
+	           Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur google parking meter json", Toast.LENGTH_SHORT).show();
+	       }
+	       if (resultsList == null) {
+	           return;
+	       }
+	       addGoogleParkingLotMarkers(resultsList);
+	   }
+	}
+   
     private class AsyncParkDownloader extends AsyncTask<URL, Void, Void> {
         private ArrayList<Park> mapParkList;
 
@@ -622,7 +638,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             pDialog.setMessage("Please wait just a moment...");
             pDialog.setCancelable(false);
             pDialog.show();
-
         }
 
         @Override
@@ -646,45 +661,4 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             markAllParksOnMap(mapParkList);
         }
     }
-//    private class AsyncParkDownloader extends AsyncTask<URL, Void, String> {
-//        @Override
-//        protected String doInBackground(URL... params) {
-//            return HttpHelper.parseConnectionForString(params[0]);
-//        }
-//        @Override
-//        protected void onPostExecute(String result) {
-//            ArrayList<Park> mapParkList = null;
-//            try {
-//                JSONArray parkJsonArray = new JSONArray(result);
-//                mapParkList = HttpHelper.parseJSONArrayForParkDetails(parkJsonArray);
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur parks json", Toast.LENGTH_SHORT).show();
-//            }
-//            markAllParksOnMap(mapParkList);
-//        }
-//    }
-
-//    private class AsyncJSONParser extends AsyncTask<URL, Void, String> {
-//        @Override
-//        protected Void doInBackground(URL... params) {
-//            String jsonStr = HttpHelper.parseConnectionForString(params[0]);
-//            ArrayList<Park> mapParkList = new ArrayList<>();
-//            try {
-//                JSONArray parkJsonArray = new JSONArray(jsonStr);
-//                mapParkList = HttpHelper.parseJSONArrayForParkDetails(parkJsonArray);
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur json", Toast.LENGTH_SHORT).show();
-//            }
-//
-//            return null;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Void result) {
-//            markAllParksOnMap();
-//            //drawRoute(route);
-//        }
-//    }
 }
