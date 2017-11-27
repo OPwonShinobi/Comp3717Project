@@ -1,0 +1,31 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.comp3717project.comp3717project.MainFragment">
+
+    <Spinner
+        android:id="@+id/main_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:entries="@array/spinner_purposeOfTravel" />
+
+    <EditText
+        android:id="@+id/main_addressEntry"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/main_spinner"
+        android:hint="Please Enter an Address"
+        android:visibility="invisible" />
+
+    <Button
+        android:id="@+id/main_btn_Submit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center"
+        android:layout_marginBottom="60dp"
+        android:text="Submit" />
+
+</RelativeLayout>

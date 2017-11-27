@@ -25,7 +25,7 @@ public class MapDBHelper extends SQLiteOpenHelper {
             "CREATE TABLE " + FavoriteTable.TABLE_NAME + " (" +
                     FavoriteTable._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     FavoriteTable.NAME + " TEXT, " +
-                    FavoriteTable.MARKERTITLE + " TEXT, " +
+                    FavoriteTable.MARKERTITLE + " TEXT UNIQUE, " +
                     FavoriteTable.LATITUDE + " REAL, " +
                     FavoriteTable.LONGITUDE + " REAL);";
 

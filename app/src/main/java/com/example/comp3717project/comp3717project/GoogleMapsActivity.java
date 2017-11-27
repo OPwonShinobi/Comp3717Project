@@ -236,6 +236,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                         Toast.makeText(GoogleMapsActivity.this,
                                 "Name of place cannot be empty", Toast.LENGTH_LONG).show();
                     } else {
+                        // remove first if exist
                         // add place to favorite table on database
                         MapDBHelper dbHelper = MapDBHelper.getInstance(GoogleMapsActivity.this);
                         db = dbHelper.getWritableDatabase();
@@ -246,39 +247,29 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                         values.put(MapDBHelper.FavoriteTable.LATITUDE, lat);
                         values.put(MapDBHelper.FavoriteTable.LONGITUDE, lon);
 
-                        db.insert(MapDBHelper.FavoriteTable.TABLE_NAME, null, values);
+                        db.insertWithOnConflict(MapDBHelper.FavoriteTable.TABLE_NAME,
+                                null,
+                                values,
+                                SQLiteDatabase.CONFLICT_REPLACE);
                         MainActivity.favoriteList.put(mTitle, favPlace);
                         db.close();
                     }
                 } else {
                     if (MainActivity.favoriteList.containsKey(mTitle)) {
-                        MapDBHelper dbHelper = MapDBHelper.getInstance(GoogleMapsActivity.this);
-                        db = dbHelper.getWritableDatabase();
-                        String whereClause = MapDBHelper.FavoriteTable.MARKERTITLE + "=?";
-                        String[] whereArgs = new String[] {mTitle};
-                        db.delete(MapDBHelper.FavoriteTable.TABLE_NAME, whereClause, whereArgs);
+                        removeFromFavoriteListDB();
                         MainActivity.favoriteList.remove(mTitle);
-                        db.close();
                     }
-
-//                    for (FavoritePlace fp : MainActivity.favoriteList) {
-//                        if (fp.getMarkerTitle().equals(mTitle)) {
-//                            MapDBHelper dbHelper = MapDBHelper.getInstance(GoogleMapsActivity.this);
-//                            db = dbHelper.getWritableDatabase();
-//
-//                            String whereClause = MapDBHelper.FavoriteTable.MARKERTITLE + "=?";
-//                            String[] whereArgs = new String[] {mTitle};
-//                            db.delete(MapDBHelper.FavoriteTable.TABLE_NAME, whereClause, whereArgs);
-//                            MainActivity.favoriteList.remove(fp);
-//                            db.close();
-//                            break;
-//                        }
-//                    }
                 }
+            }
 
-                //SharedPreferences.Editor editPrefs = prefs.edit();
-                //editPrefs.putBoolean("FavoriteCheck", favCheckBox.isChecked());
-                //editPrefs.commit();
+            // remove selected marker from favorite place database
+            private void removeFromFavoriteListDB() {
+                MapDBHelper dbHelper = MapDBHelper.getInstance(GoogleMapsActivity.this);
+                db = dbHelper.getWritableDatabase();
+                String whereClause = MapDBHelper.FavoriteTable.MARKERTITLE + "=?";
+                String[] whereArgs = new String[] {mTitle};
+                db.delete(MapDBHelper.FavoriteTable.TABLE_NAME, whereClause, whereArgs);
+                db.close();
             }
         });
 
