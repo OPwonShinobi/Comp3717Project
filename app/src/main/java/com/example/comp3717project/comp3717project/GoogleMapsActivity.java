@@ -1,9 +1,11 @@
 package com.example.comp3717project.comp3717project;
 
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -19,6 +21,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Toast;
@@ -54,6 +58,8 @@ import java.util.List;
  * This shows how to create a simple activity with a map and a marker on the map.
  */
 public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+
+    private SQLiteDatabase db;
 
     private MapView mapView;
     private GoogleMap gMap;
@@ -167,6 +173,38 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         dialogBuilder.setTitle("Address options");
         dialogBuilder.setMessage("Address: " + marker.getTitle());
 
+        final double lat = marker.getPosition().latitude;
+        final double lon = marker.getPosition().longitude;
+        final String mTitle = marker.getTitle();
+
+        final CheckBox favCheckBox = dialogView.findViewById(R.id.favCheckBox);
+        final EditText favNameEdit = dialogView.findViewById(R.id.favNameText);
+        //prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        //boolean status = prefs.getBoolean("FavoriteCheck", false);
+        //favCheckBox.setChecked(status);
+
+        // check if marker is already in favorite list
+        favCheckBox.setChecked(false);
+        favNameEdit.setVisibility(View.INVISIBLE);
+        if (MainActivity.favoriteList.containsKey(mTitle)) {
+            favCheckBox.setChecked(true);
+            favNameEdit.setVisibility(View.VISIBLE);
+            favNameEdit.setText(MainActivity.favoriteList.get(mTitle).getName());
+        }
+
+        favCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    favNameEdit.setVisibility(View.VISIBLE);
+                    favNameEdit.setText(mTitle);
+                } else {
+                    favNameEdit.setVisibility(View.INVISIBLE);
+                    favNameEdit.setText("");
+                }
+            }
+        });
+
         dialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 RadioGroup startOrDestn = dialogView.findViewById(R.id.start_destn_radio_group);
@@ -175,16 +213,57 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
                 switch (checkedID) {
                     case -1 : break; //no radio button checked
                     case R.id.set_destn_btn:
-                        end_et_address.setText(marker.getPosition().latitude + "," + marker.getPosition().longitude);
-                        addressString = getAddress(marker.getPosition().latitude, marker.getPosition().longitude);
+                        addressString = getAddress(lat, lon);
                         end_et_address.setText(addressString);
                         break;
                     case R.id.set_start_btn:
-                        start_et_address.setText(marker.getPosition().latitude + "," + marker.getPosition().longitude);
-                        addressString = getAddress(marker.getPosition().latitude, marker.getPosition().longitude);
+                        addressString = getAddress(lat, lon);
                         start_et_address.setText(addressString);
                         break;
                 }
+
+                String favName = favNameEdit.getText().toString();
+                FavoritePlace favPlace = new FavoritePlace(favName, mTitle, lat, lon);
+
+                if (favCheckBox.isChecked()) {
+                    if (favName.equals("")) {
+                        Toast.makeText(GoogleMapsActivity.this,
+                                "Name of place cannot be empty", Toast.LENGTH_LONG).show();
+                    } else {
+                        // remove first if exist
+                        // add place to favorite table on database
+                        MapDBHelper dbHelper = MapDBHelper.getInstance(GoogleMapsActivity.this);
+                        db = dbHelper.getWritableDatabase();
+
+                        ContentValues values = new ContentValues();
+                        values.put(MapDBHelper.FavoriteTable.NAME, favName);
+                        values.put(MapDBHelper.FavoriteTable.MARKERTITLE, marker.getTitle());
+                        values.put(MapDBHelper.FavoriteTable.LATITUDE, lat);
+                        values.put(MapDBHelper.FavoriteTable.LONGITUDE, lon);
+
+                        db.insertWithOnConflict(MapDBHelper.FavoriteTable.TABLE_NAME,
+                                null,
+                                values,
+                                SQLiteDatabase.CONFLICT_REPLACE);
+                        MainActivity.favoriteList.put(mTitle, favPlace);
+                        db.close();
+                    }
+                } else {
+                    if (MainActivity.favoriteList.containsKey(mTitle)) {
+                        removeFromFavoriteListDB();
+                        MainActivity.favoriteList.remove(mTitle);
+                    }
+                }
+            }
+
+            // remove selected marker from favorite place database
+            private void removeFromFavoriteListDB() {
+                MapDBHelper dbHelper = MapDBHelper.getInstance(GoogleMapsActivity.this);
+                db = dbHelper.getWritableDatabase();
+                String whereClause = MapDBHelper.FavoriteTable.MARKERTITLE + "=?";
+                String[] whereArgs = new String[] {mTitle};
+                db.delete(MapDBHelper.FavoriteTable.TABLE_NAME, whereClause, whereArgs);
+                db.close();
             }
         });
 
