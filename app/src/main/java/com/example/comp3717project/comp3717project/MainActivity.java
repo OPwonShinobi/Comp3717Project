@@ -1,6 +1,8 @@
 package com.example.comp3717project.comp3717project;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -15,18 +17,19 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
     public enum JsonTypeTag {PARKING, PARKS, SHOPPING, ADDRESS};
+    public static HashMap<String, FavoritePlace> favoriteList = new HashMap<>();
+    private SQLiteDatabase db;
+
     private TextView mTextMessage;
     private Spinner mainSpinner;
     private EditText mainAddress;
     private Button btnSubmit;
     private JsonTypeTag purpose = JsonTypeTag.PARKING;
-
-    public static List<FavoritePlace> favoriteList = new ArrayList<>();
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -53,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        updateFavoriteList(getFavoriteListAll());
 
         mTextMessage = (TextView) findViewById(R.id.main_title);
         mainSpinner = (Spinner)findViewById(R.id.main_spinner);
@@ -118,6 +123,37 @@ public class MainActivity extends AppCompatActivity {
         FAB.setOnClickListener(new tempFABListener());
     }
 
+    public String getFavoriteListAll() {
+        return "SELECT " +
+                MapDBHelper.FavoriteTable._ID + ", " +
+                MapDBHelper.FavoriteTable.NAME + ", " +
+                MapDBHelper.FavoriteTable.MARKERTITLE + ", " +
+                MapDBHelper.FavoriteTable.LATITUDE + ", " +
+                MapDBHelper.FavoriteTable.LONGITUDE +
+                " FROM " + MapDBHelper.FavoriteTable.TABLE_NAME;
+    }
+
+    public void updateFavoriteList(String sqlQuery) {
+        MapDBHelper dbHelper = MapDBHelper.getInstance(this);
+        db = dbHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery(sqlQuery, null);
+
+        ArrayList<String> list = new ArrayList<>();
+
+        if (cursor.moveToFirst()) {
+            do {
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(MapDBHelper.FavoriteTable.NAME));
+                String markerTitle = cursor.getString(cursor.getColumnIndexOrThrow(MapDBHelper.FavoriteTable.MARKERTITLE));
+                String lat = cursor.getString(cursor.getColumnIndexOrThrow(MapDBHelper.FavoriteTable.LATITUDE));
+                String lon = cursor.getString(cursor.getColumnIndexOrThrow(MapDBHelper.FavoriteTable.LONGITUDE));
+                list.add(name);
+                favoriteList.put(markerTitle, new FavoritePlace(name, markerTitle, Double.valueOf(lat), Double.valueOf(lon)));
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+    }
+
     public void StartMap(View view, String destnAddress){
         switch (purpose) {
             case SHOPPING:
@@ -142,5 +178,11 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("SELECTED_ACTION_EXTRA", 4); //exceptional case
             startActivity(intent);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        db.close();
     }
 }

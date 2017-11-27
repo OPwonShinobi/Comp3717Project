@@ -8,11 +8,12 @@
     android:orientation="vertical"
     tools:context="com.example.comp3717project.comp3717project.MainActivity">
 
-    <FrameLayout
+    <RelativeLayout
         android:id="@+id/content"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1">
+
         <TextView
             android:id="@+id/main_title"
             android:layout_width="match_parent"
@@ -34,18 +35,30 @@
             android:id="@+id/main_addressEntry"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Please Enter an Address"
             android:layout_marginTop="100dp"
-            android:visibility="invisible"/>
+            android:hint="Please Enter an Address"
+            android:visibility="invisible" />
 
         <Button
             android:id="@+id/main_btn_Submit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
             android:layout_gravity="center"
-            android:layout_marginTop="200dp"
+            android:layout_marginBottom="50dp"
             android:text="Submit" />
-    </FrameLayout>
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/main_addressEntry"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="64dp"
+            android:text="TextView" />
+
+    </RelativeLayout>
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/locate_me_fab"
         android:layout_width="wrap_content"
