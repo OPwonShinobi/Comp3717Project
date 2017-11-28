@@ -51,8 +51,8 @@ public class MainActivity extends AppCompatActivity {
                     // should be changed to another fragment
                     selectedFragment = MainFragment.newInstance(null);
                     break;
-                case R.id.navigation_notifications:
-                    mTextMessage.setText(R.string.title_notifications);
+                case R.id.navigation_favorites:
+                    mTextMessage.setText(R.string.title_favorites);
                     selectedFragment = FavoriteListFragment.newInstance(null);
                     break;
             }
@@ -153,12 +153,24 @@ public class MainActivity extends AppCompatActivity {
                 " FROM " + MapDBHelper.FavoriteTable.TABLE_NAME;
     }
 
-    public void updateFavoriteList(String sqlQuery) {
+    public static String getFavoriteListByKeyword(String keyword) {
+        return "SELECT " +
+                MapDBHelper.FavoriteTable._ID + ", " +
+                MapDBHelper.FavoriteTable.NAME + ", " +
+                MapDBHelper.FavoriteTable.MARKERTITLE + ", " +
+                MapDBHelper.FavoriteTable.LATITUDE + ", " +
+                MapDBHelper.FavoriteTable.LONGITUDE +
+                " FROM " + MapDBHelper.FavoriteTable.TABLE_NAME +
+                " WHERE " + MapDBHelper.FavoriteTable.NAME + " LIKE '%" + keyword + "%' ";
+    }
+
+    public boolean updateFavoriteList(String sqlQuery) {
         MapDBHelper dbHelper = MapDBHelper.getInstance(this);
         db = dbHelper.getReadableDatabase();
         Cursor cursor = db.rawQuery(sqlQuery, null);
 
         ArrayList<String> list = new ArrayList<>();
+        boolean hasContent = false;
 
         if (cursor.moveToFirst()) {
             do {
@@ -169,12 +181,13 @@ public class MainActivity extends AppCompatActivity {
                 list.add(name);
                 favoriteList.put(markerTitle, new FavoritePlace(name, markerTitle, Double.valueOf(lat), Double.valueOf(lon)));
             } while (cursor.moveToNext());
+            hasContent = true;
         }
 
         favPlaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, list);
 
-
         cursor.close();
+        return hasContent;
     }
 
 //    public void StartMap(View view, String destnAddress){
@@ -204,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         db.close();
     }
