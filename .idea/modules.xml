@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Comp3717Project.iml" filepath="$PROJECT_DIR$/Comp3717Project.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/git stuff.iml" filepath="$PROJECT_DIR$/git stuff.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../../../../../lpmle/Desktop/Comp3717Project/git stuff.iml" filepath="$PROJECT_DIR$/../../../../../lpmle/Desktop/Comp3717Project/git stuff.iml" />
     </modules>
   </component>
 </project>
