@@ -44,6 +44,9 @@ public class FavoriteListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // set background image opacity (between 0~255)
+        MainActivity.mainBgImg.setImageAlpha(100);
+
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_favorite_list, container, false);
         favListView = rootView.findViewById(R.id.favListView);
