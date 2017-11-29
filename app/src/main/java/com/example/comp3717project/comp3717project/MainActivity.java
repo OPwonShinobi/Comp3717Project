@@ -1,5 +1,7 @@
 package com.example.comp3717project.comp3717project;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -10,6 +12,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
@@ -123,6 +126,27 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("SELECTED_ACTION_EXTRA", 4); //exceptional case
             startActivity(intent);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle("Exit Program");
+        alertDialog.setMessage("Are you sure you want to exit?");
+        alertDialog.setCancelable(false);
+        alertDialog.setButton(Dialog.BUTTON_NEUTRAL, "Yes",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        moveTaskToBack(true);
+                    }
+                });
+        alertDialog.setButton(Dialog.BUTTON_NEGATIVE, "No",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+        alertDialog.show();
     }
 
     @Override
