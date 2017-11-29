@@ -27,12 +27,11 @@ public class HomeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // set background image opacity (between 0~255)
-        MainActivity.mainBgImg.setImageAlpha(255);
+        MainActivity.mainBgImg.setImageAlpha(225);
 
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_home, container, false);
 
         return rootView;
     }
-
 }

@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
     public static ArrayAdapter<String> favPlaceAdapter;
     private SQLiteDatabase db;
     public static ImageView mainBgImg;
+    private static int navSelected;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -39,13 +40,16 @@ public class MainActivity extends AppCompatActivity {
             switch (item.getItemId()) {
                 case R.id.navigation_home:
                     selectedFragment = HomeFragment.newInstance(null);
+                    navSelected = 0;
                     break;
                 case R.id.navigation_dashboard:
                     // should be changed to another fragment
                     selectedFragment = MainFragment.newInstance(null);
+                    navSelected = 1;
                     break;
                 case R.id.navigation_favorites:
                     selectedFragment = FavoriteListFragment.newInstance(null);
+                    navSelected = 2;
                     break;
             }
 
