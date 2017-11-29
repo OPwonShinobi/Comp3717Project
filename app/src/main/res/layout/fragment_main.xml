@@ -1,4 +1,5 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -28,5 +29,67 @@
         android:layout_gravity="center"
         android:layout_marginBottom="60dp"
         android:text="Submit" />
+
+    <ImageButton
+        android:id="@+id/shopIcon"
+        android:layout_width="250dp"
+        android:layout_height="80dp"
+        android:src="@drawable/mall"
+        app:srcCompat="@color/cast_intro_overlay_button_background_color"
+        android:layout_alignTop="@+id/main_spinner"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="I want to go Shopping."
+        android:textSize="15dp"
+        android:textColor="#4682B4"
+        android:textStyle="bold"
+        android:layout_below="@+id/shopIcon"
+        android:layout_marginTop="5dp"
+        android:layout_centerHorizontal="true" />
+
+    <ImageButton
+        android:id="@+id/parkIcon"
+        android:layout_width="250dp"
+        android:layout_height="80dp"
+        android:src="@drawable/park"
+        app:srcCompat="@color/cast_intro_overlay_button_background_color"
+        android:layout_below="@+id/shopIcon"
+        android:layout_alignStart="@+id/shopIcon"
+        android:layout_marginTop="30dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="I want to go to a park."
+        android:textSize="15dp"
+        android:textColor="#006400"
+        android:textStyle="bold"
+        android:layout_below="@+id/parkIcon"
+        android:layout_marginTop="5dp"
+        android:layout_centerHorizontal="true" />
+
+    <ImageButton
+        android:id="@+id/ownAddressIcon"
+        android:layout_width="250dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ownaddress"
+        app:srcCompat="@color/cast_intro_overlay_button_background_color"
+        android:layout_below="@+id/shopIcon"
+        android:layout_alignStart="@+id/shopIcon"
+        android:layout_marginTop="150dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="I have my own address."
+        android:textSize="15dp"
+        android:textColor="#B22222"
+        android:textStyle="bold"
+        android:layout_below="@+id/ownAddressIcon"
+        android:layout_marginTop="5dp"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
