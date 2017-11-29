@@ -9,7 +9,7 @@
         <item>I want to go shopping</item>
         <item>I want to go to a park</item>
     </string-array>
-    <string name="title_activity_google_maps">Park or Place</string>
+    <string name="title_activity_google_maps">ParkOrPlace</string>
     <string name="title_activity_maps">Park or Place</string>
 
     <!-- dialog_edit_map_marker.xml -->
