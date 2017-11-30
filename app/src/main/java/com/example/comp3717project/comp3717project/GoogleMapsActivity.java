@@ -116,8 +116,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         FloatingActionButton FAB = (FloatingActionButton) findViewById(R.id.locate_me_fab);
         FAB.setOnClickListener(new locateMeFABListener());
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this); //service used to locate phone location
-
-        //addParkingMeterLocations(); //added to global, not to map
     }
 
  	@Override
@@ -179,9 +177,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
         final CheckBox favCheckBox = dialogView.findViewById(R.id.favCheckBox);
         final EditText favNameEdit = dialogView.findViewById(R.id.favNameText);
-        //prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        //boolean status = prefs.getBoolean("FavoriteCheck", false);
-        //favCheckBox.setChecked(status);
 
         // check if marker is already in favorite list
         favCheckBox.setChecked(false);
@@ -280,7 +275,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         endLocation.setLatitude(endLatLong.latitude);
         endLocation.setLongitude(endLatLong.longitude);
         for (int i = 0; i < parkingPayStationList.size(); i++) {
-         	// Location.distanceBetween(parkingStationArray.get(i).getLat(), parkingStationArray.get(i).getLon(), endLatLong.latitude, endLatLong.longitude, results);
             ParkingLot parkinglot = parkingPayStationList.get(i);
             parkingLocation.setLatitude(parkinglot.getLat());
             parkingLocation.setLongitude(parkinglot.getLon());
@@ -367,39 +361,12 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 		} 
     }
 
-    private void demo_markAllParkingMeters() {
-        for (int i = 0; i < parkingPayStationList.size(); i++) {
-         	Location parkingLocation = new Location("test"); 
-            parkingLocation.setLatitude(parkingPayStationList.get(i).getLat());
-            parkingLocation.setLongitude(parkingPayStationList.get(i).getLon());
-            gMap.addMarker(new MarkerOptions().position(new LatLng(parkingLocation.getLatitude(), parkingLocation.getLongitude())).title("Parking").icon(
-       			BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-            );
-        }
-    }
-
     private void hideMyKeyboard() {
         View editText = this.getCurrentFocus();
         editText.clearAnimation();
         InputMethodManager imm = (InputMethodManager) getSystemService(this.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
     }
-
-    //Android geocoder wasn't doing its job, drawRoute does this and more
-    // private void gotoDestination(LatLng latLng) {
-    //     gMap.clear();
-    //     //add destn marker and move there 
-    //     gMap.addMarker(new MarkerOptions().position(latLng).title(address.getAddressLine(0)).icon(
-    //             BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
-    //     );
-    //     gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM));
-    //     //add parking marker
-    //     //addParkingMeterMarkers(latLng);
-    //     //solve edge case
-    //     if (location.equals("new westminster city hall")) {
-    //         demo_cityHallParking();
-    //     }
-    // }
 
     public void onSearchForDestination() {
         String destnLocation = end_et_address.getText().toString().trim();
@@ -419,25 +386,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             Toast t = Toast.makeText(this, "Please enter a destination.", Toast.LENGTH_LONG);
             t.show();
         }
-    }
-
-    private void demo_cityHallParking() {
-    	gMap.addMarker(new MarkerOptions()
-            .position(new LatLng(49.206893, -122.911356))
-            .title("Parking Lot")
-            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-        );
-
-		PolygonOptions parkingLotOptions = new PolygonOptions();
-		parkingLotOptions.add(new LatLng(49.206711, -122.912156));
-		parkingLotOptions.add(new LatLng(49.207338, -122.910916));
-		parkingLotOptions.add(new LatLng(49.207090, -122.910624));
-		parkingLotOptions.add(new LatLng(49.206453, -122.911809));
-		parkingLotOptions.add(new LatLng(49.206711, -122.912156 ));
-        parkingLotOptions.strokeWidth(DEFAULT_PATH_WIDTH);
-        parkingLotOptions.strokeColor(Color.rgb(0, 102, 255)); //med blue
-        parkingLotOptions.fillColor(Color.argb(75, 0, 102, 255)); //light blue
-        gMap.addPolygon(parkingLotOptions);
     }
 
     public boolean checkLocationPermission() {
@@ -513,10 +461,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startAddress, DEFAULT_ZOOM));
 
         addParkingLotMarkers(endAddress);
-        // if (endAddressStr.equals("new westminster city hall") || endAddressStr.contains("511 Royal Ave, New Westminster")) {
-        //     demo_markAllParkingMeters();
-        //     demo_cityHallParking();
-        // }
     }
 
     private void gotoMyLocation() {
@@ -547,21 +491,16 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
 
     private void markAllMallsOnMap(List<Mall> mallsList) {
         Location mallLocation = new Location("P1");
-       // Location referencePoint = new Location("P2");
-       // referencePoint.setLatitude(mDefaultLocation.latitude);
-       // referencePoint.setLongitude(mDefaultLocation.longitude);
+
         for (Mall mall : mallsList) {
             mallLocation.setLatitude(Double.parseDouble(mall.getLatitude()));
             mallLocation.setLongitude(Double.parseDouble(mall.getLongitude()));
-			// float distance = mallLocation.distanceTo(referencePoint);
-			// location distance is disabled for now
-			// if (distance <= 150) {
-                gMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(mallLocation.getLatitude(), mallLocation.getLongitude()))
-                    .title(mall.getName())
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                );
-               // }
+
+           gMap.addMarker(new MarkerOptions()
+                .position(new LatLng(mallLocation.getLatitude(), mallLocation.getLongitude()))
+                .title(mall.getName())
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+            );
         }
     }
 
@@ -600,9 +539,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         }
     }
 
-    //cheated a bit by calling this to also look for a lone destination address
-    //bc its more accurate than Android geocoder and I didnt want to
-    //use google's geolocation api, since i already wrote this
     private class AsyncRouteDownloader extends AsyncTask<URL, Void, String> {
         @Override
         protected String doInBackground(URL... params) {
@@ -656,13 +592,11 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             if (pDialog.isShowing())
                 pDialog.dismiss();
             markAllMallsOnMap(mallsList);
-            //drawRoute(route);
         }
     }
 
     private class AsyncParkingLotDownloader extends AsyncTask<URL, Void, Void> {
         private ArrayList<ParkingLot> mapParkingStations;
-        // private ArrayList<ParkingLot> mapParkingMeters;
 
         @Override
         protected Void doInBackground(URL... params) {
@@ -670,9 +604,7 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             // String metersStr = HttpHelper.parseConnectionForString(params[1]);
             try {
                 JSONArray stationsJsonArray = new JSONArray(stationsStr);
-                // JSONArray metersJsonArray = new JSONArray(metersStr);
                 mapParkingStations = HttpHelper.parseJSONArrayForParkingPayStations(stationsJsonArray);
-                // mapParkingMeters = HttpHelper.parseJSONArrayForParkingMeterDetails(metersJsonArray);
             } catch (JSONException e) {
                 e.printStackTrace();
                 Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur parking json", Toast.LENGTH_SHORT).show();
@@ -683,7 +615,6 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         @Override
         protected void onPostExecute(Void result) {
             parkingPayStationList = mapParkingStations;
-            // parkingMetersList = mapParkingMeters;
         }
     }
 

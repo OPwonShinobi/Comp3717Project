@@ -4,9 +4,11 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Created by lpmle on 2017-11-24.
+ * FavoritePlace.java
+ *
+ * @author Luke Lee
+ * @version 2017-11-24.
  */
-
 public class FavoritePlace implements Parcelable {
     String name;
     String markerTitle;

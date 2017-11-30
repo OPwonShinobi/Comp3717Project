@@ -139,24 +139,17 @@ public class MainFragment extends Fragment {
         return rootView;
     }
 
-//    // TODO: Rename method, update argument and hook method into UI event
-//    public void onButtonPressed(Uri uri) {
-//        if (mListener != null) {
-//            mListener.onFragmentInteraction(uri);
-//        }
-//    }
-
     public void StartMap(View view, String destnAddress){
 
         int position = mainSpinner.getSelectedItemPosition();
 
         switch (purpose) {
             case SHOPPING:
-                // call JSONHandler constructor for shopping
+                // handle JSON file for shopping mall
                 position = 2;
                 break;
             case PARKS:
-                // call JSONHandler constructor for parks
+                // handle JSON file for parks
                 position = 3;
                 break;
             case PARKING:

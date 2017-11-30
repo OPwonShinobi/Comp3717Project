@@ -19,6 +19,13 @@ import android.widget.ImageView;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * MainActivity.java
+ * Main entry point of the program.
+ *
+ * @author Alex Xia, Luke Lee, Roger Zhang
+ * @version Nov. 29, 2017
+ */
 public class MainActivity extends AppCompatActivity {
 
     public enum JsonTypeTag {PARKING, PARKS, SHOPPING, ADDRESS};
@@ -31,6 +38,12 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
+        /**
+         * Directs the user to corresponding fragment on selected navigation item.
+         *
+         * @param item  navigation items
+         * @return true if navigation completes successfully
+         */
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             FragmentManager fragmentManager = getSupportFragmentManager();
@@ -43,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
                     navSelected = 0;
                     break;
                 case R.id.navigation_dashboard:
-                    // should be changed to another fragment
+                    // main functionality starts here
                     selectedFragment = MainFragment.newInstance(null);
                     navSelected = 1;
                     break;
@@ -62,6 +75,11 @@ public class MainActivity extends AppCompatActivity {
 
     };
 
+    /**
+     * Gets called when the activity first loads and creates the activity.
+     *
+     * @param savedInstanceState    a bundle containing saved instances
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,6 +101,11 @@ public class MainActivity extends AppCompatActivity {
         FAB.setOnClickListener(new tempFABListener());
     }
 
+    /**
+     * Contains the SQL query statement to retrieve list of all favorite places from database.
+     *
+     * @return a string representing the SQL query
+     */
     public static String getFavoriteListAll() {
         return "SELECT " +
                 MapDBHelper.FavoriteTable._ID + ", " +
@@ -93,6 +116,12 @@ public class MainActivity extends AppCompatActivity {
                 " FROM " + MapDBHelper.FavoriteTable.TABLE_NAME;
     }
 
+    /**
+     * Takes a SQL query as input and updates the list of favorite places.
+     *
+     * @param sqlQuery  SQL query
+     * @return true if database has content to update the list
+     */
     public boolean updateFavoriteList(String sqlQuery) {
         MapDBHelper dbHelper = MapDBHelper.getInstance(this);
         db = dbHelper.getReadableDatabase();
@@ -119,6 +148,10 @@ public class MainActivity extends AppCompatActivity {
         return hasContent;
     }
 
+    /**
+     * An inner listener class that sets onClick event on the floating action bar.
+     * Goes to GoogleMapActivity and set a marker on current location.
+     */
     private class tempFABListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
@@ -129,6 +162,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Overrides the activity's onDestroy method; closes the database variable before app terminates.
+     */
     @Override
     public void onDestroy() {
         super.onDestroy();

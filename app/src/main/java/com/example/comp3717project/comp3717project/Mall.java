@@ -8,7 +8,6 @@ public class Mall {
     private String name;
     private String longitude;
     private String latitude;
-    //private String polyline; sadly this is a list, and thats too much trouble
 
     public Mall(String name, String longitude, String latitude) {
         this.name = name;

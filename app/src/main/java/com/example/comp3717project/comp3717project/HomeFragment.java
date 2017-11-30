@@ -8,7 +8,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * A simple {@link Fragment} subclass.
+ * HomeFragment.java
+ *
+ * Fragement class for home screen.
  */
 public class HomeFragment extends Fragment {
 
