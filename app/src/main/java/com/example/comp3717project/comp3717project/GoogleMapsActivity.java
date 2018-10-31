@@ -12,6 +12,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
@@ -556,6 +557,12 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             if (route == null) {
                 return;
             }
+            // added because google wants me to give them payment info WoW-style to use their free API
+            // !null route has empty destn, the src contains a msg from google
+            if (route.getDestn().equals("")) {
+                Toast.makeText(GoogleMapsActivity.this, "A message from google: " + route.getSrc(), Toast.LENGTH_LONG).show();
+                return;
+            }
             drawRoute(route);
         }
     }
@@ -603,11 +610,13 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
             String stationsStr = HttpHelper.parseConnectionForString(params[0]);
             // String metersStr = HttpHelper.parseConnectionForString(params[1]);
             try {
-                JSONArray stationsJsonArray = new JSONArray(stationsStr);
+                JSONObject unproccessedJson = new JSONObject(stationsStr);
+                JSONArray stationsJsonArray = unproccessedJson.getJSONArray("features");
                 mapParkingStations = HttpHelper.parseJSONArrayForParkingPayStations(stationsJsonArray);
             } catch (JSONException e) {
                 e.printStackTrace();
-                Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur parking json", Toast.LENGTH_SHORT).show();
+                Log.d("WARNING", "parking station bullsht");
+                //Toast.makeText(GoogleMapsActivity.this, "something went wrong while parsing ur parking json", Toast.LENGTH_SHORT).show();
             }
             return null;
         }
@@ -656,7 +665,8 @@ public class GoogleMapsActivity extends AppCompatActivity implements OnMapReadyC
         protected Void doInBackground(URL... params) {
             String jsonStr = HttpHelper.parseConnectionForString(params[0]);
             try {
-                JSONArray parkJsonArray = new JSONArray(jsonStr);
+                JSONObject unproccessedJson = new JSONObject(jsonStr);
+                JSONArray parkJsonArray = unproccessedJson.getJSONArray("features");
                 mapParkList = HttpHelper.parseJSONArrayForParkDetails(parkJsonArray);
                 int i = 0;
             } catch (JSONException e) {

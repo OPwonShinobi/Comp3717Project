@@ -69,8 +69,8 @@ public class HttpHelper {
             ArrayList<ParkingLot> detailsAsObj = new ArrayList<>();
             for (int i = 0; i < jsonArray.length(); ++i) {
                 JSONObject ParkingStation = jsonArray.getJSONObject(i);
-                String name = ParkingStation.getString("STATIONID");
-                JSONArray coordList = ParkingStation.getJSONObject("json_geometry").getJSONArray("coordinates");
+                String name = ParkingStation.getJSONObject("properties").getString("STATIONID");
+                JSONArray coordList = ParkingStation.getJSONObject("geometry").getJSONArray("coordinates");
                 double lon = coordList.getDouble(0);
                 double lat = coordList.getDouble(1);
                 detailsAsObj.add(new ParkingLot(name, lat, lon));
@@ -132,6 +132,11 @@ public class HttpHelper {
             String polylinePoints = routes.getJSONObject(0).getJSONObject("overview_polyline").getString("points");
             return new Route(startAddress, endAddress, polylinePoints);
         }
+        // Google want's my credit card info or it caps me at 1 api call/day. For this? no way
+        // since cannot display popup from here, return empty route and let GoogleMapsActivity handle that
+        if (authStatus.equals("OVER_QUERY_LIMIT")) {
+            return new Route(authStatus,"","");
+        }
         return null;
     }
 
@@ -156,18 +161,20 @@ public class HttpHelper {
         ArrayList<Park> parkList = new ArrayList<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject parkJsonObj = jsonArray.getJSONObject(i);
+            JSONObject parkGeometry = parkJsonObj.getJSONObject("geometry");
+            JSONObject parkProperties = parkJsonObj.getJSONObject("properties");
             Park park = new Park(
-                    parkJsonObj.getString("Name"),
-                    parkJsonObj.getString("StrName"), //this could be null
-                    parkJsonObj.getString("StrNum"), //idk y u need this
-                    parkJsonObj.getString("Category") //or this
+                    parkProperties.getString("Name"),
+                    parkProperties.getString("StrName"), //this could be null
+                    parkProperties.getString("StrNum"), //idk y u need this
+                    parkProperties.getString("Category") //or this
             );
             //set border info (includes address)
-            String shapeType = parkJsonObj.getJSONObject("json_geometry").getString("type");
+            String shapeType = parkGeometry.getString("type");
             if (!shapeType.equals("Polygon")) //im too tired to do multipolygons
                 continue;
 
-            JSONArray coordList = parkJsonObj.getJSONObject("json_geometry").getJSONArray("coordinates").getJSONArray(0);
+            JSONArray coordList = parkGeometry.getJSONArray("coordinates").getJSONArray(0);
             ArrayList<LatLng> polygonCoords = new ArrayList<>();
             for (int j = 0; j < coordList.length(); j++) {
                 JSONArray latLngPair = coordList.getJSONArray(j);
